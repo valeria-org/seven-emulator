@@ -1,7 +1,7 @@
 #include "seven/handler_helpers.hpp"
 
 #include <iced_x86/instruction.hpp>
-#include <iced_x86/memory_size_info.hpp>
+#include <iced_x86/memory_size_ext.hpp>
 #include <iced_x86/op_kind.hpp>
 #include <iced_x86/register.hpp>
 
@@ -282,18 +282,18 @@ std::size_t register_width(iced_x86::Register reg) {
     case iced_x86::Register::AL: case iced_x86::Register::CL: case iced_x86::Register::DL: case iced_x86::Register::BL:
     case iced_x86::Register::AH: case iced_x86::Register::CH: case iced_x86::Register::DH: case iced_x86::Register::BH:
     case iced_x86::Register::SPL: case iced_x86::Register::BPL: case iced_x86::Register::SIL: case iced_x86::Register::DIL:
-    case iced_x86::Register::R8_L: case iced_x86::Register::R9_L: case iced_x86::Register::R10_L: case iced_x86::Register::R11_L:
-    case iced_x86::Register::R12_L: case iced_x86::Register::R13_L: case iced_x86::Register::R14_L: case iced_x86::Register::R15_L:
+    case iced_x86::Register::R8L: case iced_x86::Register::R9L: case iced_x86::Register::R10L: case iced_x86::Register::R11L:
+    case iced_x86::Register::R12L: case iced_x86::Register::R13L: case iced_x86::Register::R14L: case iced_x86::Register::R15L:
       return 1;
     case iced_x86::Register::AX: case iced_x86::Register::CX: case iced_x86::Register::DX: case iced_x86::Register::BX:
     case iced_x86::Register::SP: case iced_x86::Register::BP: case iced_x86::Register::SI: case iced_x86::Register::DI:
-    case iced_x86::Register::R8_W: case iced_x86::Register::R9_W: case iced_x86::Register::R10_W: case iced_x86::Register::R11_W:
-    case iced_x86::Register::R12_W: case iced_x86::Register::R13_W: case iced_x86::Register::R14_W: case iced_x86::Register::R15_W:
+    case iced_x86::Register::R8W: case iced_x86::Register::R9W: case iced_x86::Register::R10W: case iced_x86::Register::R11W:
+    case iced_x86::Register::R12W: case iced_x86::Register::R13W: case iced_x86::Register::R14W: case iced_x86::Register::R15W:
       return 2;
     case iced_x86::Register::EAX: case iced_x86::Register::ECX: case iced_x86::Register::EDX: case iced_x86::Register::EBX:
     case iced_x86::Register::ESP: case iced_x86::Register::EBP: case iced_x86::Register::ESI: case iced_x86::Register::EDI:
-    case iced_x86::Register::R8_D: case iced_x86::Register::R9_D: case iced_x86::Register::R10_D: case iced_x86::Register::R11_D:
-    case iced_x86::Register::R12_D: case iced_x86::Register::R13_D: case iced_x86::Register::R14_D: case iced_x86::Register::R15_D:
+    case iced_x86::Register::R8D: case iced_x86::Register::R9D: case iced_x86::Register::R10D: case iced_x86::Register::R11D:
+    case iced_x86::Register::R12D: case iced_x86::Register::R13D: case iced_x86::Register::R14D: case iced_x86::Register::R15D:
       return 4;
     case iced_x86::Register::ES:
     case iced_x86::Register::CS:
@@ -312,25 +312,25 @@ std::size_t register_width(iced_x86::Register reg) {
 
 std::size_t operand_width(const iced_x86::Instruction& instr, std::uint32_t operand_index) {
   const auto kind = instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     return register_width(instr.op_register(operand_index));
   }
-  if (kind == iced_x86::OpKind::MEMORY) {
-    return iced_x86::memory_size_ext::get_size(static_cast<iced_x86::MemorySize>(instr.memory_size()));
+  if (kind == iced_x86::OpKind::Memory) {
+    return iced_x86::memory_size_ext::size(static_cast<iced_x86::MemorySize>(instr.memory_size()));
   }
   switch (kind) {
-    case iced_x86::OpKind::IMMEDIATE8:
-    case iced_x86::OpKind::IMMEDIATE8_2ND:
-    case iced_x86::OpKind::IMMEDIATE8TO16:
-    case iced_x86::OpKind::IMMEDIATE8TO32:
-    case iced_x86::OpKind::IMMEDIATE8TO64:
+    case iced_x86::OpKind::Immediate8:
+    case iced_x86::OpKind::Immediate8_2nd:
+    case iced_x86::OpKind::Immediate8to16:
+    case iced_x86::OpKind::Immediate8to32:
+    case iced_x86::OpKind::Immediate8to64:
       return 1;
-    case iced_x86::OpKind::IMMEDIATE16:
+    case iced_x86::OpKind::Immediate16:
       return 2;
-    case iced_x86::OpKind::IMMEDIATE32:
-    case iced_x86::OpKind::IMMEDIATE32TO64:
+    case iced_x86::OpKind::Immediate32:
+    case iced_x86::OpKind::Immediate32to64:
       return 4;
-    case iced_x86::OpKind::IMMEDIATE64:
+    case iced_x86::OpKind::Immediate64:
       return 8;
     default:
       return 8;
@@ -342,10 +342,10 @@ std::uint64_t memory_address(ExecutionContext& ctx) {
     return mask_linear_address(ctx.state, ctx.instr.ip_rel_memory_address());
   }
   std::uint64_t address = 0;
-  if (ctx.instr.memory_base() != iced_x86::Register::NONE) {
+  if (ctx.instr.memory_base() != iced_x86::Register::None) {
     address += read_register(ctx.state, ctx.instr.memory_base());
   }
-  if (ctx.instr.memory_index() != iced_x86::Register::NONE) {
+  if (ctx.instr.memory_index() != iced_x86::Register::None) {
     address += read_register(ctx.state, ctx.instr.memory_index()) * ctx.instr.memory_index_scale();
   }
   address += ctx.instr.memory_displacement64();
@@ -412,14 +412,14 @@ std::uint64_t read_register(CpuState& state, iced_x86::Register reg) {
         return 6;
       case iced_x86::Register::RDI: case iced_x86::Register::EDI: case iced_x86::Register::DI: case iced_x86::Register::DIL:
         return 7;
-      case iced_x86::Register::R8: case iced_x86::Register::R8_D: case iced_x86::Register::R8_W: case iced_x86::Register::R8_L: return 8;
-      case iced_x86::Register::R9: case iced_x86::Register::R9_D: case iced_x86::Register::R9_W: case iced_x86::Register::R9_L: return 9;
-      case iced_x86::Register::R10: case iced_x86::Register::R10_D: case iced_x86::Register::R10_W: case iced_x86::Register::R10_L: return 10;
-      case iced_x86::Register::R11: case iced_x86::Register::R11_D: case iced_x86::Register::R11_W: case iced_x86::Register::R11_L: return 11;
-      case iced_x86::Register::R12: case iced_x86::Register::R12_D: case iced_x86::Register::R12_W: case iced_x86::Register::R12_L: return 12;
-      case iced_x86::Register::R13: case iced_x86::Register::R13_D: case iced_x86::Register::R13_W: case iced_x86::Register::R13_L: return 13;
-      case iced_x86::Register::R14: case iced_x86::Register::R14_D: case iced_x86::Register::R14_W: case iced_x86::Register::R14_L: return 14;
-      case iced_x86::Register::R15: case iced_x86::Register::R15_D: case iced_x86::Register::R15_W: case iced_x86::Register::R15_L: return 15;
+      case iced_x86::Register::R8: case iced_x86::Register::R8D: case iced_x86::Register::R8W: case iced_x86::Register::R8L: return 8;
+      case iced_x86::Register::R9: case iced_x86::Register::R9D: case iced_x86::Register::R9W: case iced_x86::Register::R9L: return 9;
+      case iced_x86::Register::R10: case iced_x86::Register::R10D: case iced_x86::Register::R10W: case iced_x86::Register::R10L: return 10;
+      case iced_x86::Register::R11: case iced_x86::Register::R11D: case iced_x86::Register::R11W: case iced_x86::Register::R11L: return 11;
+      case iced_x86::Register::R12: case iced_x86::Register::R12D: case iced_x86::Register::R12W: case iced_x86::Register::R12L: return 12;
+      case iced_x86::Register::R13: case iced_x86::Register::R13D: case iced_x86::Register::R13W: case iced_x86::Register::R13L: return 13;
+      case iced_x86::Register::R14: case iced_x86::Register::R14D: case iced_x86::Register::R14W: case iced_x86::Register::R14L: return 14;
+      case iced_x86::Register::R15: case iced_x86::Register::R15D: case iced_x86::Register::R15W: case iced_x86::Register::R15L: return 15;
       default: return 0;
     }
   };
@@ -492,14 +492,14 @@ void write_register(CpuState& state, iced_x86::Register reg, std::uint64_t value
       case iced_x86::Register::RBP: case iced_x86::Register::EBP: case iced_x86::Register::BP: case iced_x86::Register::BPL: return 5;
       case iced_x86::Register::RSI: case iced_x86::Register::ESI: case iced_x86::Register::SI: case iced_x86::Register::SIL: return 6;
       case iced_x86::Register::RDI: case iced_x86::Register::EDI: case iced_x86::Register::DI: case iced_x86::Register::DIL: return 7;
-      case iced_x86::Register::R8: case iced_x86::Register::R8_D: case iced_x86::Register::R8_W: case iced_x86::Register::R8_L: return 8;
-      case iced_x86::Register::R9: case iced_x86::Register::R9_D: case iced_x86::Register::R9_W: case iced_x86::Register::R9_L: return 9;
-      case iced_x86::Register::R10: case iced_x86::Register::R10_D: case iced_x86::Register::R10_W: case iced_x86::Register::R10_L: return 10;
-      case iced_x86::Register::R11: case iced_x86::Register::R11_D: case iced_x86::Register::R11_W: case iced_x86::Register::R11_L: return 11;
-      case iced_x86::Register::R12: case iced_x86::Register::R12_D: case iced_x86::Register::R12_W: case iced_x86::Register::R12_L: return 12;
-      case iced_x86::Register::R13: case iced_x86::Register::R13_D: case iced_x86::Register::R13_W: case iced_x86::Register::R13_L: return 13;
-      case iced_x86::Register::R14: case iced_x86::Register::R14_D: case iced_x86::Register::R14_W: case iced_x86::Register::R14_L: return 14;
-      case iced_x86::Register::R15: case iced_x86::Register::R15_D: case iced_x86::Register::R15_W: case iced_x86::Register::R15_L: return 15;
+      case iced_x86::Register::R8: case iced_x86::Register::R8D: case iced_x86::Register::R8W: case iced_x86::Register::R8L: return 8;
+      case iced_x86::Register::R9: case iced_x86::Register::R9D: case iced_x86::Register::R9W: case iced_x86::Register::R9L: return 9;
+      case iced_x86::Register::R10: case iced_x86::Register::R10D: case iced_x86::Register::R10W: case iced_x86::Register::R10L: return 10;
+      case iced_x86::Register::R11: case iced_x86::Register::R11D: case iced_x86::Register::R11W: case iced_x86::Register::R11L: return 11;
+      case iced_x86::Register::R12: case iced_x86::Register::R12D: case iced_x86::Register::R12W: case iced_x86::Register::R12L: return 12;
+      case iced_x86::Register::R13: case iced_x86::Register::R13D: case iced_x86::Register::R13W: case iced_x86::Register::R13L: return 13;
+      case iced_x86::Register::R14: case iced_x86::Register::R14D: case iced_x86::Register::R14W: case iced_x86::Register::R14L: return 14;
+      case iced_x86::Register::R15: case iced_x86::Register::R15D: case iced_x86::Register::R15W: case iced_x86::Register::R15L: return 15;
       default:
         return 0;
     }
@@ -529,18 +529,18 @@ void write_register(CpuState& state, iced_x86::Register reg, std::uint64_t value
 
 std::uint64_t immediate_value(const iced_x86::Instruction& instr, std::uint32_t operand_index) {
   switch (instr.op_kind(operand_index)) {
-    case iced_x86::OpKind::IMMEDIATE8: return instr.immediate8();
-    case iced_x86::OpKind::IMMEDIATE8_2ND: return instr.immediate8_2nd();
-    case iced_x86::OpKind::IMMEDIATE16: return instr.immediate16();
-    case iced_x86::OpKind::IMMEDIATE32: return instr.immediate32();
-    case iced_x86::OpKind::IMMEDIATE64: return instr.immediate64();
-    case iced_x86::OpKind::IMMEDIATE8TO16: return static_cast<std::uint64_t>(instr.immediate8to16());
-    case iced_x86::OpKind::IMMEDIATE8TO32: return static_cast<std::uint64_t>(instr.immediate8to32());
-    case iced_x86::OpKind::IMMEDIATE8TO64: return static_cast<std::uint64_t>(instr.immediate8to64());
-    case iced_x86::OpKind::IMMEDIATE32TO64: return static_cast<std::uint64_t>(instr.immediate32to64());
-    case iced_x86::OpKind::NEAR_BRANCH16: return instr.near_branch16();
-    case iced_x86::OpKind::NEAR_BRANCH32: return instr.near_branch32();
-    case iced_x86::OpKind::NEAR_BRANCH64: return instr.near_branch64();
+    case iced_x86::OpKind::Immediate8: return instr.immediate8();
+    case iced_x86::OpKind::Immediate8_2nd: return instr.immediate8_2nd();
+    case iced_x86::OpKind::Immediate16: return instr.immediate16();
+    case iced_x86::OpKind::Immediate32: return instr.immediate32();
+    case iced_x86::OpKind::Immediate64: return instr.immediate64();
+    case iced_x86::OpKind::Immediate8to16: return static_cast<std::uint64_t>(instr.immediate8to16());
+    case iced_x86::OpKind::Immediate8to32: return static_cast<std::uint64_t>(instr.immediate8to32());
+    case iced_x86::OpKind::Immediate8to64: return static_cast<std::uint64_t>(instr.immediate8to64());
+    case iced_x86::OpKind::Immediate32to64: return static_cast<std::uint64_t>(instr.immediate32to64());
+    case iced_x86::OpKind::NearBranch16: return instr.near_branch16();
+    case iced_x86::OpKind::NearBranch32: return instr.near_branch32();
+    case iced_x86::OpKind::NearBranch64: return instr.near_branch64();
     default:
       return 0;
   }
@@ -551,10 +551,10 @@ std::uint64_t read_operand(ExecutionContext& ctx, std::uint32_t operand_index, s
     *ok = true;
   }
   const auto kind = ctx.instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     return read_register(ctx.state, ctx.instr.op_register(operand_index));
   }
-  if (kind == iced_x86::OpKind::MEMORY) {
+  if (kind == iced_x86::OpKind::Memory) {
     const auto address = memory_address(ctx);
     std::uint64_t value = 0;
     if (!ctx.memory.read(address, &value, width)) {
@@ -571,11 +571,11 @@ std::uint64_t read_operand(ExecutionContext& ctx, std::uint32_t operand_index, s
 bool write_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::uint64_t value, std::size_t width) {
   value = truncate(value, width);
   const auto kind = ctx.instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     write_register(ctx.state, ctx.instr.op_register(operand_index), value);
     return true;
   }
-  if (kind == iced_x86::OpKind::MEMORY) {
+  if (kind == iced_x86::OpKind::Memory) {
     return ctx.memory.write(memory_address(ctx), &value, width);
   }
   return false;

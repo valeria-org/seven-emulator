@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2018-present iced project and contributors
+
+// Umbrella header: includes the whole public API
+
+#pragma once
+
+// Core
+#include "iced_x86/code.hpp"
+#include "iced_x86/code_ext.hpp"
+#include "iced_x86/code_size.hpp"
+#include "iced_x86/condition_code.hpp"
+#include "iced_x86/constant_offsets.hpp"
+#include "iced_x86/cpuid_feature.hpp"
+#include "iced_x86/encoding_kind.hpp"
+#include "iced_x86/flow_control.hpp"
+#include "iced_x86/iced_constants.hpp"
+#include "iced_x86/iced_error.hpp"
+#include "iced_x86/iced_features.hpp"
+#include "iced_x86/instruction.hpp"
+#include "iced_x86/memory_size.hpp"
+#include "iced_x86/memory_size_ext.hpp"
+#include "iced_x86/mnemonic.hpp"
+#include "iced_x86/mvex_conv_fn.hpp"
+#include "iced_x86/mvex_eh_bit.hpp"
+#include "iced_x86/mvex_reg_mem_conv.hpp"
+#include "iced_x86/mvex_tuple_type_lut_kind.hpp"
+#include "iced_x86/op_kind.hpp"
+#include "iced_x86/register.hpp"
+#include "iced_x86/register_ext.hpp"
+#include "iced_x86/rep_prefix_kind.hpp"
+#include "iced_x86/rflags_bits.hpp"
+#include "iced_x86/rounding_control.hpp"
+#include "iced_x86/slice.hpp"
+#include "iced_x86/tuple_type.hpp"
+// Formatters
+#include "iced_x86/cc_a.hpp"
+#include "iced_x86/cc_ae.hpp"
+#include "iced_x86/cc_b.hpp"
+#include "iced_x86/cc_be.hpp"
+#include "iced_x86/cc_e.hpp"
+#include "iced_x86/cc_g.hpp"
+#include "iced_x86/cc_ge.hpp"
+#include "iced_x86/cc_l.hpp"
+#include "iced_x86/cc_le.hpp"
+#include "iced_x86/cc_ne.hpp"
+#include "iced_x86/cc_np.hpp"
+#include "iced_x86/cc_p.hpp"
+#include "iced_x86/decorator_kind.hpp"
+#include "iced_x86/fast_formatter.hpp"
+#include "iced_x86/fast_formatter_options.hpp"
+#include "iced_x86/format_mnemonic_options.hpp"
+#include "iced_x86/formatter.hpp"
+#include "iced_x86/formatter_options.hpp"
+#include "iced_x86/formatter_output.hpp"
+#include "iced_x86/formatter_text_kind.hpp"
+#include "iced_x86/gas_formatter.hpp"
+#include "iced_x86/intel_formatter.hpp"
+#include "iced_x86/masm_formatter.hpp"
+#include "iced_x86/memory_size_options.hpp"
+#include "iced_x86/nasm_formatter.hpp"
+#include "iced_x86/number_base.hpp"
+#include "iced_x86/number_kind.hpp"
+#include "iced_x86/prefix_kind.hpp"
+#include "iced_x86/symbol_flags.hpp"
+#include "iced_x86/symbol_resolver.hpp"
+
+// Decoder
+#include "iced_x86/decoder.hpp"
+#include "iced_x86/decoder_error.hpp"
+#include "iced_x86/decoder_options.hpp"
+
+// Encoder, op code info, block encoder
+#include "iced_x86/block_encoder.hpp"
+#include "iced_x86/block_encoder_options.hpp"
+#include "iced_x86/encoder.hpp"
+#include "iced_x86/mandatory_prefix.hpp"
+#include "iced_x86/memory_operand.hpp"
+#include "iced_x86/op_code_info.hpp"
+#include "iced_x86/op_code_operand_kind.hpp"
+#include "iced_x86/op_code_table_kind.hpp"
+#include "iced_x86/reloc_kind.hpp"
+
+// Instruction info
+#include "iced_x86/instruction_info.hpp"
+#include "iced_x86/op_access.hpp"
+
+// The code assembler isn't included since it's big (thousands of methods), include "iced_x86/code_asm.hpp"

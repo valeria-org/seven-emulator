@@ -28,7 +28,7 @@
 
 #include <iced_x86/decoder.hpp>
 #include <iced_x86/instruction_info.hpp>
-#include <iced_x86/memory_size_info.hpp>
+#include <iced_x86/memory_size_ext.hpp>
 #include <iced_x86/op_access.hpp>
 
 #include <seven/compat.hpp>
@@ -187,10 +187,10 @@ struct basic_block_hook_state {
 
 bool op_access_reads(const iced_x86::OpAccess access) {
   switch (access) {
-    case iced_x86::OpAccess::READ:
-    case iced_x86::OpAccess::COND_READ:
-    case iced_x86::OpAccess::READ_WRITE:
-    case iced_x86::OpAccess::READ_COND_WRITE:
+    case iced_x86::OpAccess::Read:
+    case iced_x86::OpAccess::CondRead:
+    case iced_x86::OpAccess::ReadWrite:
+    case iced_x86::OpAccess::ReadCondWrite:
       return true;
     default:
       return false;
@@ -199,10 +199,10 @@ bool op_access_reads(const iced_x86::OpAccess access) {
 
 bool op_access_writes(const iced_x86::OpAccess access) {
   switch (access) {
-    case iced_x86::OpAccess::WRITE:
-    case iced_x86::OpAccess::COND_WRITE:
-    case iced_x86::OpAccess::READ_WRITE:
-    case iced_x86::OpAccess::READ_COND_WRITE:
+    case iced_x86::OpAccess::Write:
+    case iced_x86::OpAccess::CondWrite:
+    case iced_x86::OpAccess::ReadWrite:
+    case iced_x86::OpAccess::ReadCondWrite:
       return true;
     default:
       return false;
@@ -224,10 +224,10 @@ seven::MemoryPermissionMask operation_to_permissions(const memory_operation op) 
 
 std::optional<int> interrupt_vector_from_instruction(const seven::TrapHookContext& ctx) {
   switch (ctx.instr.code()) {
-    case iced_x86::Code::INT1: return 1;
-    case iced_x86::Code::INT3: return 3;
-    case iced_x86::Code::INT_IMM8: return static_cast<int>(ctx.instr.immediate8());
-    case iced_x86::Code::INTO:
+    case iced_x86::Code::Int1: return 1;
+    case iced_x86::Code::Int3: return 3;
+    case iced_x86::Code::Int_imm8: return static_cast<int>(ctx.instr.immediate8());
+    case iced_x86::Code::Into:
       if ((ctx.state.rflags & seven::kFlagOF) != 0) return 4;
       return std::nullopt;
     default:
@@ -236,16 +236,17 @@ std::optional<int> interrupt_vector_from_instruction(const seven::TrapHookContex
 }
 
 std::optional<iced_x86::Instruction> decode_instruction_at(const seven::CpuState& state, const seven::Memory& memory, const uint64_t rip) {
-  std::array<uint8_t, iced_x86::IcedConstants::_MAX_INSTRUCTION_LENGTH> bytes{};
+  std::array<uint8_t, iced_x86::IcedConstants::MAX_INSTRUCTION_LENGTH> bytes{};
   if (!memory.read(rip, bytes.data(), bytes.size(), seven::MemoryAccessKind::instruction_fetch)) {
     return std::nullopt;
   }
-  iced_x86::Decoder decoder(seven::decoder_bitness(state.mode), std::span<const uint8_t>(bytes.data(), bytes.size()), rip);
-  const auto decoded = decoder.decode();
-  if (!decoded.has_value() || decoded->code() == iced_x86::Code::INVALID) {
+  iced_x86::Decoder decoder =
+      iced_x86::Decoder::with_ip(seven::decoder_bitness(state.mode), bytes.data(), bytes.size(), rip, iced_x86::DecoderOptions::NONE);
+  const iced_x86::Instruction decoded = decoder.decode();
+  if (decoded.code() == iced_x86::Code::INVALID) {
     return std::nullopt;
   }
-  return decoded.value();
+  return decoded;
 }
 
 basic_block summarize_basic_block(const seven::CpuState& state, const seven::Memory& memory, const std::uint64_t rip) {
@@ -259,12 +260,12 @@ basic_block summarize_basic_block(const seven::CpuState& state, const seven::Mem
       break;
     }
 
-    const auto length = std::max<std::size_t>(1u, static_cast<std::size_t>(instr->length()));
+    const auto length = std::max<std::size_t>(1u, static_cast<std::size_t>(instr->len()));
     block.instruction_count += 1;
     block.size += length;
 
-    const auto flow = iced_x86::InstructionExtensions::flow_control(instr.value());
-    if (flow != iced_x86::FlowControl::NEXT) {
+    const auto flow = instr.value().flow_control();
+    if (flow != iced_x86::FlowControl::Next) {
       break;
     }
 
@@ -285,28 +286,28 @@ std::vector<decoded_memory_access> decode_memory_accesses(seven::CpuState& state
   const auto& info = info_factory.info(instr);
 
   for (const auto& used_mem : info.used_memory()) {
-    const auto is_read = op_access_reads(used_mem.access);
-    const auto is_write = op_access_writes(used_mem.access);
+    const auto is_read = op_access_reads(used_mem.access());
+    const auto is_write = op_access_writes(used_mem.access());
     if (!is_read && !is_write) {
       continue;
     }
 
     uint64_t address{};
-    if (used_mem.base != iced_x86::Register::NONE) {
-      address += seven::detail::read_register(state, used_mem.base);
+    if (used_mem.base() != iced_x86::Register::None) {
+      address += seven::detail::read_register(state, used_mem.base());
     }
-    if (used_mem.index != iced_x86::Register::NONE) {
-      address += seven::detail::read_register(state, used_mem.index) * used_mem.scale;
+    if (used_mem.index() != iced_x86::Register::None) {
+      address += seven::detail::read_register(state, used_mem.index()) * used_mem.scale();
     }
-    address += used_mem.displacement;
-    if (used_mem.segment == iced_x86::Register::FS) {
+    address += used_mem.displacement();
+    if (used_mem.segment() == iced_x86::Register::FS) {
       address += state.fs_base;
-    } else if (used_mem.segment == iced_x86::Register::GS) {
+    } else if (used_mem.segment() == iced_x86::Register::GS) {
       address += state.gs_base;
     }
     address = seven::mask_linear_address(state, address);
 
-    const auto size = std::max<size_t>(1, iced_x86::memory_size_ext::get_size(used_mem.memory_size));
+    const auto size = std::max<size_t>(1, iced_x86::memory_size_ext::size(used_mem.memory_size()));
     accesses.push_back(decoded_memory_access{
       .address = address,
       .size = size,
@@ -452,7 +453,7 @@ class seven_x86_64_emulator final : public x86_64_emulator {
                        "[seven-testproject] rip=0x%llx code=%u len=%u rax=0x%llx rcx=0x%llx rdx=0x%llx rflags=0x%llx\n",
                        static_cast<unsigned long long>(ctx.state.rip),
                        static_cast<unsigned>(ctx.instr.code()),
-                       static_cast<unsigned>(ctx.instr.length()),
+                       static_cast<unsigned>(ctx.instr.len()),
                        static_cast<unsigned long long>(ctx.state.gpr[0]),
                        static_cast<unsigned long long>(ctx.state.gpr[1]),
                        static_cast<unsigned long long>(ctx.state.gpr[2]),
@@ -859,7 +860,7 @@ class seven_x86_64_emulator final : public x86_64_emulator {
         // advance past the syscall instruction after the hook returns. Unicorn
         // does that for us; seven handles the trap entirely in the hook, so we
         // must apply the same advance here to preserve the existing contract.
-        ctx.state.rip += static_cast<std::uint64_t>(ctx.instr.length());
+        ctx.state.rip += static_cast<std::uint64_t>(ctx.instr.len());
       }
       return result;
     });
@@ -877,7 +878,7 @@ class seven_x86_64_emulator final : public x86_64_emulator {
       state->first = false;
       state->fallthrough_rip = ctx.next_rip;
       state->fallthrough_valid =
-          iced_x86::InstructionExtensions::flow_control(ctx.instr) == iced_x86::FlowControl::NEXT;
+          ctx.instr.flow_control() == iced_x86::FlowControl::Next;
       return seven::InstructionHookResult{};
     });
     return make_executor_hook(id);

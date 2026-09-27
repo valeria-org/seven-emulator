@@ -81,10 +81,10 @@ void write_vec(CpuState& state, iced_x86::Register reg, big_uint value, std::siz
 }
 
 std::size_t infer_width(ExecutionContext& ctx, std::uint32_t dst_index, std::uint32_t src_index) {
-  if (ctx.instr.op_kind(dst_index) == iced_x86::OpKind::REGISTER && is_vector_register(ctx.instr.op_register(dst_index))) {
+  if (ctx.instr.op_kind(dst_index) == iced_x86::OpKind::Register && is_vector_register(ctx.instr.op_register(dst_index))) {
     return vector_width(ctx.instr.op_register(dst_index));
   }
-  if (ctx.instr.op_kind(src_index) == iced_x86::OpKind::REGISTER && is_vector_register(ctx.instr.op_register(src_index))) {
+  if (ctx.instr.op_kind(src_index) == iced_x86::OpKind::Register && is_vector_register(ctx.instr.op_register(src_index))) {
     return vector_width(ctx.instr.op_register(src_index));
   }
   const auto width = detail::operand_width(ctx.instr, dst_index);
@@ -94,25 +94,25 @@ std::size_t infer_width(ExecutionContext& ctx, std::uint32_t dst_index, std::uin
 big_uint read_any(ExecutionContext& ctx, std::uint32_t operand_index, std::size_t width, bool* ok) {
   if (ok) *ok = true;
   const auto kind = ctx.instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     const auto reg = ctx.instr.op_register(operand_index);
     if (is_vector_register(reg)) return read_vec(ctx.state, reg) & mask(width);
     return big_uint(detail::read_register(ctx.state, reg)) & mask(width);
   }
-  if (kind == iced_x86::OpKind::MEMORY) return read_mem(ctx, detail::memory_address(ctx), width, ok);
+  if (kind == iced_x86::OpKind::Memory) return read_mem(ctx, detail::memory_address(ctx), width, ok);
   return big_uint(detail::immediate_value(ctx.instr, operand_index)) & mask(width);
 }
 
 bool write_any(ExecutionContext& ctx, std::uint32_t operand_index, big_uint value, std::size_t width, bool zero_upper = false) {
   value &= mask(width);
   const auto kind = ctx.instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     const auto reg = ctx.instr.op_register(operand_index);
     if (is_vector_register(reg)) write_vec(ctx.state, reg, value, width, zero_upper);
     else detail::write_register(ctx.state, reg, static_cast<std::uint64_t>(value), width);
     return true;
   }
-  if (kind == iced_x86::OpKind::MEMORY) return write_mem(ctx, detail::memory_address(ctx), value, width);
+  if (kind == iced_x86::OpKind::Memory) return write_mem(ctx, detail::memory_address(ctx), value, width);
   return false;
 }
 
@@ -137,7 +137,7 @@ ExecutionResult low_move_legacy_scalar_load(ExecutionContext& ctx, std::uint32_t
   bool ok = false;
   const auto value = read_any(ctx, src, width, &ok);
   if (!ok) return detail::memory_fault(ctx, detail::memory_address(ctx));
-  const bool src_is_memory = ctx.instr.op_kind(src) == iced_x86::OpKind::MEMORY;
+  const bool src_is_memory = ctx.instr.op_kind(src) == iced_x86::OpKind::Memory;
   if (!write_any(ctx, dst, value, width, src_is_memory)) return detail::memory_fault(ctx, detail::memory_address(ctx));
   return {};
 }
@@ -185,7 +185,7 @@ ExecutionResult pextrw_to_gpr_or_mem(ExecutionContext& ctx) {
   const auto src_reg = ctx.instr.op_register(1);
   const auto lane = static_cast<std::size_t>(detail::immediate_value(ctx.instr, 2) & 0x7u);
   const auto word = (read_vec(ctx.state, src_reg) >> (lane * 16)) & 0xFFFFu;
-  if (ctx.instr.op_kind(0) == iced_x86::OpKind::REGISTER) {
+  if (ctx.instr.op_kind(0) == iced_x86::OpKind::Register) {
     const auto dst_reg = ctx.instr.op_register(0);
     const auto dst_width = detail::register_width(dst_reg);
     detail::write_register(ctx.state, dst_reg, static_cast<std::uint64_t>(word), dst_width);

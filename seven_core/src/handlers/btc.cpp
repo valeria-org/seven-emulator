@@ -15,7 +15,7 @@ ExecutionResult btc_rmw(ExecutionContext& ctx, std::size_t width, std::uint64_t 
   std::uint64_t bit = 0;
   std::uint64_t address = 0;
 
-  if (ctx.instr.op0_kind() == iced_x86::OpKind::MEMORY) {
+  if (ctx.instr.op0_kind() == iced_x86::OpKind::Memory) {
     // See bt.cpp's read_bt_base_value for why this needs to be a signed
     // floor division (arithmetic shift), not unsigned truncating division.
     const auto shift = static_cast<unsigned>(std::countr_zero(bit_span));
@@ -39,7 +39,7 @@ ExecutionResult btc_rmw(ExecutionContext& ctx, std::size_t width, std::uint64_t 
   const bool old_bit = ((value >> bit) & 1ull) != 0;
   value ^= (1ull << bit);
 
-  if (ctx.instr.op0_kind() == iced_x86::OpKind::MEMORY) {
+  if (ctx.instr.op0_kind() == iced_x86::OpKind::Memory) {
     const auto wr = detail::write_memory_checked(ctx, address, &value, width);
     if (!wr.ok()) {
       return wr;

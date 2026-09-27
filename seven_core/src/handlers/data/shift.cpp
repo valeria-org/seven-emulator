@@ -212,7 +212,7 @@ ExecutionResult rotate_left(ExecutionContext& ctx, std::size_t width, std::uint6
   const auto result = (shift == 0) ? (value & m) : (((value << shift) | (value >> (bits - shift))) & m);
   const auto cf = (result & 1ull) != 0ull;
   detail::set_flag(ctx.state.rflags, kFlagCF, cf);
-  const bool op0_is_mem = ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER;
+  const bool op0_is_mem = ctx.instr.op_kind(0) != iced_x86::OpKind::Register;
   if (masked == 1 || count_is_cl || op0_is_mem) {
     const auto old_msb = (value & msb_mask(width)) != 0ull;
     const auto old_next = (value & (msb_mask(width) >> 1)) != 0ull;
@@ -246,7 +246,7 @@ ExecutionResult rotate_right(ExecutionContext& ctx, std::size_t width, std::uint
   const auto result = (shift == 0) ? (value & m) : (((value >> shift) | (value << (bits - shift))) & m);
   const auto cf = ((result & msb_mask(width)) != 0ull);
   detail::set_flag(ctx.state.rflags, kFlagCF, cf);
-  const bool op0_is_mem = ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER;
+  const bool op0_is_mem = ctx.instr.op_kind(0) != iced_x86::OpKind::Register;
   if (masked == 1 || count_is_cl || op0_is_mem) {
     const auto old_lsb = (value & 1ull) != 0ull;
     const auto old_msb = (value & msb_mask(width)) != 0ull;

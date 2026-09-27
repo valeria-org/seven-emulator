@@ -71,55 +71,55 @@ std::uint64_t Executor::total_retired() const noexcept {
 
 ExecutionResult Executor::step(CpuState& state, Memory& memory) {
   ++total_steps_;
-  std::array<std::uint8_t, iced_x86::IcedConstants::_MAX_INSTRUCTION_LENGTH> bytes{};
+  std::array<std::uint8_t, iced_x86::IcedConstants::MAX_INSTRUCTION_LENGTH> bytes{};
   if (!memory.read(state.rip, bytes.data(), bytes.size())) {
     ++stop_reason_counts_[stop_reason_to_index(StopReason::page_fault)];
     return {StopReason::page_fault, 0, ExceptionInfo{StopReason::page_fault, state.rip, 0}, std::nullopt};
   }
 
-  iced_x86::Decoder decoder(64, std::span<const std::uint8_t>(bytes.data(), bytes.size()), state.rip);
-  const auto decoded = decoder.decode();
-  if (!decoded.has_value()) {
+  iced_x86::Decoder decoder = iced_x86::Decoder::with_ip(64, bytes.data(), bytes.size(), state.rip, iced_x86::DecoderOptions::NONE);
+  const iced_x86::Instruction decoded = decoder.decode();
+  if (decoded.code() == iced_x86::Code::INVALID) {
     ++stop_reason_counts_[stop_reason_to_index(StopReason::decode_error)];
     return {StopReason::decode_error, 0, ExceptionInfo{StopReason::decode_error, state.rip, 0}, std::nullopt};
   }
 
-  const auto& instr = decoded.value();
+  const auto& instr = decoded;
   if (instr.code() == iced_x86::Code::INVALID) {
     ++stop_reason_counts_[stop_reason_to_index(StopReason::invalid_opcode)];
     return {StopReason::invalid_opcode, 0, ExceptionInfo{StopReason::invalid_opcode, state.rip, 0}, instr.code()};
   }
 
-  ExecutionContext ctx{state, memory, instr, state.rip + instr.length(), false};
+  ExecutionContext ctx{state, memory, instr, state.rip + instr.len(), false};
   ExecutionResult result{};
   const auto code = instr.code();
   switch (code) {
-    case iced_x86::Code::VEX_ANDN_R32_R32_RM32: result = handlers::handle_code_VEX_ANDN_R32_R32_RM32(ctx); break;
-    case iced_x86::Code::VEX_ANDN_R64_R64_RM64: result = handlers::handle_code_VEX_ANDN_R64_R64_RM64(ctx); break;
-    case iced_x86::Code::VEX_BEXTR_R32_RM32_R32: result = handlers::handle_code_VEX_BEXTR_R32_RM32_R32(ctx); break;
-    case iced_x86::Code::VEX_BEXTR_R64_RM64_R64: result = handlers::handle_code_VEX_BEXTR_R64_RM64_R64(ctx); break;
-    case iced_x86::Code::VEX_BLSI_R32_RM32: result = handlers::handle_code_VEX_BLSI_R32_RM32(ctx); break;
-    case iced_x86::Code::VEX_BLSI_R64_RM64: result = handlers::handle_code_VEX_BLSI_R64_RM64(ctx); break;
-    case iced_x86::Code::VEX_BLSMSK_R32_RM32: result = handlers::handle_code_VEX_BLSMSK_R32_RM32(ctx); break;
-    case iced_x86::Code::VEX_BLSMSK_R64_RM64: result = handlers::handle_code_VEX_BLSMSK_R64_RM64(ctx); break;
-    case iced_x86::Code::VEX_BLSR_R32_RM32: result = handlers::handle_code_VEX_BLSR_R32_RM32(ctx); break;
-    case iced_x86::Code::VEX_BLSR_R64_RM64: result = handlers::handle_code_VEX_BLSR_R64_RM64(ctx); break;
-    case iced_x86::Code::VEX_BZHI_R32_RM32_R32: result = handlers::handle_code_VEX_BZHI_R32_RM32_R32(ctx); break;
-    case iced_x86::Code::VEX_BZHI_R64_RM64_R64: result = handlers::handle_code_VEX_BZHI_R64_RM64_R64(ctx); break;
-    case iced_x86::Code::VEX_MULX_R32_R32_RM32: result = handlers::handle_code_VEX_MULX_R32_R32_RM32(ctx); break;
-    case iced_x86::Code::VEX_MULX_R64_R64_RM64: result = handlers::handle_code_VEX_MULX_R64_R64_RM64(ctx); break;
-    case iced_x86::Code::VEX_PDEP_R32_R32_RM32: result = handlers::handle_code_VEX_PDEP_R32_R32_RM32(ctx); break;
-    case iced_x86::Code::VEX_PDEP_R64_R64_RM64: result = handlers::handle_code_VEX_PDEP_R64_R64_RM64(ctx); break;
-    case iced_x86::Code::VEX_PEXT_R32_R32_RM32: result = handlers::handle_code_VEX_PEXT_R32_R32_RM32(ctx); break;
-    case iced_x86::Code::VEX_PEXT_R64_R64_RM64: result = handlers::handle_code_VEX_PEXT_R64_R64_RM64(ctx); break;
-    case iced_x86::Code::VEX_RORX_R32_RM32_IMM8: result = handlers::handle_code_VEX_RORX_R32_RM32_IMM8(ctx); break;
-    case iced_x86::Code::VEX_RORX_R64_RM64_IMM8: result = handlers::handle_code_VEX_RORX_R64_RM64_IMM8(ctx); break;
-    case iced_x86::Code::VEX_SARX_R32_RM32_R32: result = handlers::handle_code_VEX_SARX_R32_RM32_R32(ctx); break;
-    case iced_x86::Code::VEX_SARX_R64_RM64_R64: result = handlers::handle_code_VEX_SARX_R64_RM64_R64(ctx); break;
-    case iced_x86::Code::VEX_SHLX_R32_RM32_R32: result = handlers::handle_code_VEX_SHLX_R32_RM32_R32(ctx); break;
-    case iced_x86::Code::VEX_SHLX_R64_RM64_R64: result = handlers::handle_code_VEX_SHLX_R64_RM64_R64(ctx); break;
-    case iced_x86::Code::VEX_SHRX_R32_RM32_R32: result = handlers::handle_code_VEX_SHRX_R32_RM32_R32(ctx); break;
-    case iced_x86::Code::VEX_SHRX_R64_RM64_R64: result = handlers::handle_code_VEX_SHRX_R64_RM64_R64(ctx); break;
+    case iced_x86::Code::VEX_Andn_r32_r32_rm32: result = handlers::handle_code_VEX_ANDN_R32_R32_RM32(ctx); break;
+    case iced_x86::Code::VEX_Andn_r64_r64_rm64: result = handlers::handle_code_VEX_ANDN_R64_R64_RM64(ctx); break;
+    case iced_x86::Code::VEX_Bextr_r32_rm32_r32: result = handlers::handle_code_VEX_BEXTR_R32_RM32_R32(ctx); break;
+    case iced_x86::Code::VEX_Bextr_r64_rm64_r64: result = handlers::handle_code_VEX_BEXTR_R64_RM64_R64(ctx); break;
+    case iced_x86::Code::VEX_Blsi_r32_rm32: result = handlers::handle_code_VEX_BLSI_R32_RM32(ctx); break;
+    case iced_x86::Code::VEX_Blsi_r64_rm64: result = handlers::handle_code_VEX_BLSI_R64_RM64(ctx); break;
+    case iced_x86::Code::VEX_Blsmsk_r32_rm32: result = handlers::handle_code_VEX_BLSMSK_R32_RM32(ctx); break;
+    case iced_x86::Code::VEX_Blsmsk_r64_rm64: result = handlers::handle_code_VEX_BLSMSK_R64_RM64(ctx); break;
+    case iced_x86::Code::VEX_Blsr_r32_rm32: result = handlers::handle_code_VEX_BLSR_R32_RM32(ctx); break;
+    case iced_x86::Code::VEX_Blsr_r64_rm64: result = handlers::handle_code_VEX_BLSR_R64_RM64(ctx); break;
+    case iced_x86::Code::VEX_Bzhi_r32_rm32_r32: result = handlers::handle_code_VEX_BZHI_R32_RM32_R32(ctx); break;
+    case iced_x86::Code::VEX_Bzhi_r64_rm64_r64: result = handlers::handle_code_VEX_BZHI_R64_RM64_R64(ctx); break;
+    case iced_x86::Code::VEX_Mulx_r32_r32_rm32: result = handlers::handle_code_VEX_MULX_R32_R32_RM32(ctx); break;
+    case iced_x86::Code::VEX_Mulx_r64_r64_rm64: result = handlers::handle_code_VEX_MULX_R64_R64_RM64(ctx); break;
+    case iced_x86::Code::VEX_Pdep_r32_r32_rm32: result = handlers::handle_code_VEX_PDEP_R32_R32_RM32(ctx); break;
+    case iced_x86::Code::VEX_Pdep_r64_r64_rm64: result = handlers::handle_code_VEX_PDEP_R64_R64_RM64(ctx); break;
+    case iced_x86::Code::VEX_Pext_r32_r32_rm32: result = handlers::handle_code_VEX_PEXT_R32_R32_RM32(ctx); break;
+    case iced_x86::Code::VEX_Pext_r64_r64_rm64: result = handlers::handle_code_VEX_PEXT_R64_R64_RM64(ctx); break;
+    case iced_x86::Code::VEX_Rorx_r32_rm32_imm8: result = handlers::handle_code_VEX_RORX_R32_RM32_IMM8(ctx); break;
+    case iced_x86::Code::VEX_Rorx_r64_rm64_imm8: result = handlers::handle_code_VEX_RORX_R64_RM64_IMM8(ctx); break;
+    case iced_x86::Code::VEX_Sarx_r32_rm32_r32: result = handlers::handle_code_VEX_SARX_R32_RM32_R32(ctx); break;
+    case iced_x86::Code::VEX_Sarx_r64_rm64_r64: result = handlers::handle_code_VEX_SARX_R64_RM64_R64(ctx); break;
+    case iced_x86::Code::VEX_Shlx_r32_rm32_r32: result = handlers::handle_code_VEX_SHLX_R32_RM32_R32(ctx); break;
+    case iced_x86::Code::VEX_Shlx_r64_rm64_r64: result = handlers::handle_code_VEX_SHLX_R64_RM64_R64(ctx); break;
+    case iced_x86::Code::VEX_Shrx_r32_rm32_r32: result = handlers::handle_code_VEX_SHRX_R32_RM32_R32(ctx); break;
+    case iced_x86::Code::VEX_Shrx_r64_rm64_r64: result = handlers::handle_code_VEX_SHRX_R64_RM64_R64(ctx); break;
     default:
       result = unsupported(ctx);
       break;

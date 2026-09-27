@@ -318,7 +318,7 @@ ExecutionResult handle_code_MOV_SREG_RM16(ExecutionContext& ctx) {
   if (dst_reg == iced_x86::Register::SS) {
     ctx.state.debug_suppression = 1;
     if ((ctx.state.rflags & kFlagTF) != 0) ctx.state.pending_single_step = true;
-    if (ctx.instr.op_kind(1) == iced_x86::OpKind::MEMORY) {
+    if (ctx.instr.op_kind(1) == iced_x86::OpKind::Memory) {
       ctx.debug_hit_bits |= detail::debug_data_breakpoint_hits(ctx.state, detail::memory_address(ctx), 2, true, false);
     }
   }
@@ -336,7 +336,7 @@ ExecutionResult handle_code_MOV_SREG_R32M16(ExecutionContext& ctx) {
   if (dst_reg == iced_x86::Register::SS) {
     ctx.state.debug_suppression = 1;
     if ((ctx.state.rflags & kFlagTF) != 0) ctx.state.pending_single_step = true;
-    if (ctx.instr.op_kind(1) == iced_x86::OpKind::MEMORY) {
+    if (ctx.instr.op_kind(1) == iced_x86::OpKind::Memory) {
       ctx.debug_hit_bits |= detail::debug_data_breakpoint_hits(ctx.state, detail::memory_address(ctx), 4, true, false);
     }
   }

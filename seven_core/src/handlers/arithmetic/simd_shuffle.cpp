@@ -79,7 +79,7 @@ big_uint read_mem(ExecutionContext& ctx, std::uint64_t address, std::size_t widt
 
 big_uint read_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::size_t width, bool* ok) {
   const auto kind = ctx.instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     const auto reg = ctx.instr.op_register(operand_index);
     if (!is_vector_register(reg)) {
       if (ok) *ok = false;
@@ -88,7 +88,7 @@ big_uint read_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::s
     if (ok) *ok = true;
     return read_vec(ctx.state, reg) & mask(width);
   }
-  if (kind == iced_x86::OpKind::MEMORY) {
+  if (kind == iced_x86::OpKind::Memory) {
     return read_mem(ctx, detail::memory_address(ctx), width, ok);
   }
   if (ok) *ok = false;
@@ -123,7 +123,7 @@ void store_elements(big_uint& value, std::size_t lane_offset_bytes, const std::a
 
 template <typename T, std::size_t N, typename Fn>
 ExecutionResult legacy_binary_lanewise(ExecutionContext& ctx, std::size_t lane_bytes, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -144,7 +144,7 @@ ExecutionResult legacy_binary_lanewise(ExecutionContext& ctx, std::size_t lane_b
 
 template <typename T, std::size_t N, typename Fn>
 ExecutionResult vex_binary_lanewise(ExecutionContext& ctx, std::size_t lane_bytes, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -166,7 +166,7 @@ ExecutionResult vex_binary_lanewise(ExecutionContext& ctx, std::size_t lane_byte
 
 template <typename T, std::size_t N, typename Fn>
 ExecutionResult legacy_unary_lanewise(ExecutionContext& ctx, std::size_t lane_bytes, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -185,7 +185,7 @@ ExecutionResult legacy_unary_lanewise(ExecutionContext& ctx, std::size_t lane_by
 
 template <typename T, std::size_t N, typename Fn>
 ExecutionResult vex_unary_lanewise(ExecutionContext& ctx, std::size_t lane_bytes, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -203,7 +203,7 @@ ExecutionResult vex_unary_lanewise(ExecutionContext& ctx, std::size_t lane_bytes
 }
 
 ExecutionResult duplicate_low_double(ExecutionContext& ctx, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;

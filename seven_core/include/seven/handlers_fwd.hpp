@@ -5,7 +5,7 @@
 namespace seven {
 namespace handlers {
 
-#define KUBERA_CODE(code) ExecutionResult handle_code_##code(ExecutionContext& ctx);
+#define KUBERA_CODE(code, name) ExecutionResult handle_code_##name(ExecutionContext& ctx);
 #include "seven/handled_codes.def"
 #undef KUBERA_CODE
 

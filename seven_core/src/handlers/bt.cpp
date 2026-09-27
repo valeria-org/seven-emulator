@@ -12,7 +12,7 @@ uint64_t read_bit_index_1(std::uint64_t value, std::size_t width) {
 ExecutionResult read_bt_base_value(ExecutionContext& ctx, std::size_t width, std::uint64_t bit_index, std::uint64_t& value_out,
                                    std::uint64_t& bit_out) {
   const auto bit_span = 8ull * width;
-  if (ctx.instr.op0_kind() == iced_x86::OpKind::MEMORY) {
+  if (ctx.instr.op0_kind() == iced_x86::OpKind::Memory) {
     // bit_index is a signed two's-complement value (the caller sign-extends
     // register-sourced indices to the operand width; immediate-sourced ones
     // are already small and non-negative). Intel defines the effective

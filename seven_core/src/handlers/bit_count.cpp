@@ -89,22 +89,22 @@ iced_x86::Register crc32_dest_register(iced_x86::Register reg, std::size_t width
       return width == 8 ? iced_x86::Register::RSI : iced_x86::Register::ESI;
     case iced_x86::Register::RDI: case iced_x86::Register::EDI: case iced_x86::Register::DI: case iced_x86::Register::DIL:
       return width == 8 ? iced_x86::Register::RDI : iced_x86::Register::EDI;
-    case iced_x86::Register::R8: case iced_x86::Register::R8_D: case iced_x86::Register::R8_W: case iced_x86::Register::R8_L:
-      return width == 8 ? iced_x86::Register::R8 : iced_x86::Register::R8_D;
-    case iced_x86::Register::R9: case iced_x86::Register::R9_D: case iced_x86::Register::R9_W: case iced_x86::Register::R9_L:
-      return width == 8 ? iced_x86::Register::R9 : iced_x86::Register::R9_D;
-    case iced_x86::Register::R10: case iced_x86::Register::R10_D: case iced_x86::Register::R10_W: case iced_x86::Register::R10_L:
-      return width == 8 ? iced_x86::Register::R10 : iced_x86::Register::R10_D;
-    case iced_x86::Register::R11: case iced_x86::Register::R11_D: case iced_x86::Register::R11_W: case iced_x86::Register::R11_L:
-      return width == 8 ? iced_x86::Register::R11 : iced_x86::Register::R11_D;
-    case iced_x86::Register::R12: case iced_x86::Register::R12_D: case iced_x86::Register::R12_W: case iced_x86::Register::R12_L:
-      return width == 8 ? iced_x86::Register::R12 : iced_x86::Register::R12_D;
-    case iced_x86::Register::R13: case iced_x86::Register::R13_D: case iced_x86::Register::R13_W: case iced_x86::Register::R13_L:
-      return width == 8 ? iced_x86::Register::R13 : iced_x86::Register::R13_D;
-    case iced_x86::Register::R14: case iced_x86::Register::R14_D: case iced_x86::Register::R14_W: case iced_x86::Register::R14_L:
-      return width == 8 ? iced_x86::Register::R14 : iced_x86::Register::R14_D;
-    case iced_x86::Register::R15: case iced_x86::Register::R15_D: case iced_x86::Register::R15_W: case iced_x86::Register::R15_L:
-      return width == 8 ? iced_x86::Register::R15 : iced_x86::Register::R15_D;
+    case iced_x86::Register::R8: case iced_x86::Register::R8D: case iced_x86::Register::R8W: case iced_x86::Register::R8L:
+      return width == 8 ? iced_x86::Register::R8 : iced_x86::Register::R8D;
+    case iced_x86::Register::R9: case iced_x86::Register::R9D: case iced_x86::Register::R9W: case iced_x86::Register::R9L:
+      return width == 8 ? iced_x86::Register::R9 : iced_x86::Register::R9D;
+    case iced_x86::Register::R10: case iced_x86::Register::R10D: case iced_x86::Register::R10W: case iced_x86::Register::R10L:
+      return width == 8 ? iced_x86::Register::R10 : iced_x86::Register::R10D;
+    case iced_x86::Register::R11: case iced_x86::Register::R11D: case iced_x86::Register::R11W: case iced_x86::Register::R11L:
+      return width == 8 ? iced_x86::Register::R11 : iced_x86::Register::R11D;
+    case iced_x86::Register::R12: case iced_x86::Register::R12D: case iced_x86::Register::R12W: case iced_x86::Register::R12L:
+      return width == 8 ? iced_x86::Register::R12 : iced_x86::Register::R12D;
+    case iced_x86::Register::R13: case iced_x86::Register::R13D: case iced_x86::Register::R13W: case iced_x86::Register::R13L:
+      return width == 8 ? iced_x86::Register::R13 : iced_x86::Register::R13D;
+    case iced_x86::Register::R14: case iced_x86::Register::R14D: case iced_x86::Register::R14W: case iced_x86::Register::R14L:
+      return width == 8 ? iced_x86::Register::R14 : iced_x86::Register::R14D;
+    case iced_x86::Register::R15: case iced_x86::Register::R15D: case iced_x86::Register::R15W: case iced_x86::Register::R15L:
+      return width == 8 ? iced_x86::Register::R15 : iced_x86::Register::R15D;
     default: return reg;
   }
 }
@@ -122,7 +122,7 @@ std::uint32_t crc32c_update(std::uint32_t crc, std::uint64_t value, std::size_t 
 
 ExecutionResult crc32_impl(ExecutionContext& ctx) {
   const auto width = detail::operand_width(ctx.instr, 1);
-  const auto dest_width = ctx.instr.code() == iced_x86::Code::CRC32_R64_RM8 || ctx.instr.code() == iced_x86::Code::CRC32_R64_RM64 ? 8u : 4u;
+  const auto dest_width = ctx.instr.code() == iced_x86::Code::Crc32_r64_rm8 || ctx.instr.code() == iced_x86::Code::Crc32_r64_rm64 ? 8u : 4u;
   const auto dest_reg = crc32_dest_register(ctx.instr.op_register(0), dest_width);
   bool ok = false;
   const auto src = detail::read_operand(ctx, 1, width, &ok);

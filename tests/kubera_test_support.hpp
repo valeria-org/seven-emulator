@@ -29,7 +29,7 @@ inline bool encode_to_bytes(const iced_x86::Instruction& instr, std::vector<std:
   iced_x86::Encoder encoder(64);
   const auto encoded_size = encoder.encode(instr, kBase);
   if (!encoded_size) {
-    ADD_FAILURE() << "[encode fail] " << label << ": " << encoded_size.error().message;
+    ADD_FAILURE() << "[encode fail] " << label << ": " << encoded_size.error().message();
     return false;
   }
   bytes = encoder.take_buffer();
@@ -86,44 +86,44 @@ inline std::size_t gpr_index(iced_x86::Register reg) {
     case iced_x86::Register::DIL:
       return 7;
     case iced_x86::Register::R8:
-    case iced_x86::Register::R8_D:
-    case iced_x86::Register::R8_W:
-    case iced_x86::Register::R8_L:
+    case iced_x86::Register::R8D:
+    case iced_x86::Register::R8W:
+    case iced_x86::Register::R8L:
       return 8;
     case iced_x86::Register::R9:
-    case iced_x86::Register::R9_D:
-    case iced_x86::Register::R9_W:
-    case iced_x86::Register::R9_L:
+    case iced_x86::Register::R9D:
+    case iced_x86::Register::R9W:
+    case iced_x86::Register::R9L:
       return 9;
     case iced_x86::Register::R10:
-    case iced_x86::Register::R10_D:
-    case iced_x86::Register::R10_W:
-    case iced_x86::Register::R10_L:
+    case iced_x86::Register::R10D:
+    case iced_x86::Register::R10W:
+    case iced_x86::Register::R10L:
       return 10;
     case iced_x86::Register::R11:
-    case iced_x86::Register::R11_D:
-    case iced_x86::Register::R11_W:
-    case iced_x86::Register::R11_L:
+    case iced_x86::Register::R11D:
+    case iced_x86::Register::R11W:
+    case iced_x86::Register::R11L:
       return 11;
     case iced_x86::Register::R12:
-    case iced_x86::Register::R12_D:
-    case iced_x86::Register::R12_W:
-    case iced_x86::Register::R12_L:
+    case iced_x86::Register::R12D:
+    case iced_x86::Register::R12W:
+    case iced_x86::Register::R12L:
       return 12;
     case iced_x86::Register::R13:
-    case iced_x86::Register::R13_D:
-    case iced_x86::Register::R13_W:
-    case iced_x86::Register::R13_L:
+    case iced_x86::Register::R13D:
+    case iced_x86::Register::R13W:
+    case iced_x86::Register::R13L:
       return 13;
     case iced_x86::Register::R14:
-    case iced_x86::Register::R14_D:
-    case iced_x86::Register::R14_W:
-    case iced_x86::Register::R14_L:
+    case iced_x86::Register::R14D:
+    case iced_x86::Register::R14W:
+    case iced_x86::Register::R14L:
       return 14;
     case iced_x86::Register::R15:
-    case iced_x86::Register::R15_D:
-    case iced_x86::Register::R15_W:
-    case iced_x86::Register::R15_L:
+    case iced_x86::Register::R15D:
+    case iced_x86::Register::R15W:
+    case iced_x86::Register::R15L:
       return 15;
     default:
       return 0;

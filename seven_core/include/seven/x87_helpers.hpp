@@ -51,7 +51,7 @@ inline ExecutionResult x87_unary_st0(ExecutionContext& ctx, Fn&& fn) {
 }
 
 inline ExecutionResult x87_fxch(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(1) != iced_x86::OpKind::REGISTER) {
+  if (ctx.instr.op_kind(1) != iced_x86::OpKind::Register) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto reg = ctx.instr.op_register(1);
@@ -180,7 +180,7 @@ inline ExecutionResult x87_binary_mem_int_st0_with_status(ExecutionContext& ctx,
 
 template <typename Fn>
 inline ExecutionResult x87_binary_st_regs(ExecutionContext& ctx, std::uint32_t dst_op, std::uint32_t src_op, Fn&& fn) {
-  if (ctx.instr.op_kind(dst_op) != iced_x86::OpKind::REGISTER || ctx.instr.op_kind(src_op) != iced_x86::OpKind::REGISTER) {
+  if (ctx.instr.op_kind(dst_op) != iced_x86::OpKind::Register || ctx.instr.op_kind(src_op) != iced_x86::OpKind::Register) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto dst = ctx.instr.op_register(dst_op);
@@ -205,7 +205,7 @@ inline ExecutionResult x87_binary_st_regs(ExecutionContext& ctx, std::uint32_t d
 
 template <typename Fn>
 inline ExecutionResult x87_binary_st_regs_with_status(ExecutionContext& ctx, std::uint32_t dst_op, std::uint32_t src_op, Fn&& fn) {
-  if (ctx.instr.op_kind(dst_op) != iced_x86::OpKind::REGISTER || ctx.instr.op_kind(src_op) != iced_x86::OpKind::REGISTER) {
+  if (ctx.instr.op_kind(dst_op) != iced_x86::OpKind::Register || ctx.instr.op_kind(src_op) != iced_x86::OpKind::Register) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto dst = ctx.instr.op_register(dst_op);
@@ -370,7 +370,7 @@ inline X87Scalar x87_round_to_control(const CpuState& state, X87Scalar value) {
 }
 
 inline ExecutionResult x87_reg_move(ExecutionContext& ctx, std::uint32_t dst, std::uint32_t src, bool pop) {
-  if (ctx.instr.op_kind(dst) != iced_x86::OpKind::REGISTER || ctx.instr.op_kind(src) != iced_x86::OpKind::REGISTER) {
+  if (ctx.instr.op_kind(dst) != iced_x86::OpKind::Register || ctx.instr.op_kind(src) != iced_x86::OpKind::Register) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto dst_reg = ctx.instr.op_register(dst);
@@ -413,7 +413,7 @@ inline void x87_set_eflags_cmp(ExecutionContext& ctx, int relation) {
 
 inline ExecutionResult x87_move_if(ExecutionContext& ctx, bool take) {
   if (!take) return {};
-  if (ctx.instr.op_kind(1) != iced_x86::OpKind::REGISTER) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  if (ctx.instr.op_kind(1) != iced_x86::OpKind::Register) return detail::memory_fault(ctx, detail::memory_address(ctx));
   const auto src = ctx.instr.op_register(1);
   if (src < iced_x86::Register::ST0 || src > iced_x86::Register::ST7) return detail::memory_fault(ctx, detail::memory_address(ctx));
   const auto src_idx = x87_st_index(src);
@@ -455,7 +455,7 @@ inline ExecutionResult x87_compare_mem(ExecutionContext& ctx, std::size_t width,
 }
 
 inline ExecutionResult x87_compare_regs(ExecutionContext& ctx, std::uint32_t lhs_op, std::uint32_t rhs_op, bool pop_lhs, bool pop_rhs, bool eflags, bool quiet = false) {
-  if (ctx.instr.op_kind(lhs_op) != iced_x86::OpKind::REGISTER || ctx.instr.op_kind(rhs_op) != iced_x86::OpKind::REGISTER) {
+  if (ctx.instr.op_kind(lhs_op) != iced_x86::OpKind::Register || ctx.instr.op_kind(rhs_op) != iced_x86::OpKind::Register) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto lhs_reg = ctx.instr.op_register(lhs_op);
@@ -483,7 +483,7 @@ inline ExecutionResult x87_compare_regs(ExecutionContext& ctx, std::uint32_t lhs
 }
 
 inline ExecutionResult x87_compare_st0_sti(ExecutionContext& ctx, std::uint32_t src_op, bool eflags, bool pop_st0, bool quiet = false) {
-  if (ctx.instr.op_kind(src_op) != iced_x86::OpKind::REGISTER) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  if (ctx.instr.op_kind(src_op) != iced_x86::OpKind::Register) return detail::memory_fault(ctx, detail::memory_address(ctx));
   const auto src_reg = ctx.instr.op_register(src_op);
   const auto src_idx = x87_st_index(src_reg);
   std::uint16_t exceptions = 0;
@@ -544,7 +544,7 @@ inline ExecutionResult x87_store_bcd(ExecutionContext& ctx) {
 }
 
 inline ExecutionResult x87_store_st0_to_sti(ExecutionContext& ctx, bool pop) {
-  if (ctx.instr.op_kind(1) != iced_x86::OpKind::REGISTER) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  if (ctx.instr.op_kind(1) != iced_x86::OpKind::Register) return detail::memory_fault(ctx, detail::memory_address(ctx));
   const auto dst = ctx.instr.op_register(1);
   const auto idx = x87_st_index(dst);
   if (ctx.state.x87_is_empty(0)) return x87_stack_underflow(ctx);
@@ -554,7 +554,7 @@ inline ExecutionResult x87_store_st0_to_sti(ExecutionContext& ctx, bool pop) {
 }
 
 inline ExecutionResult x87_free_sti(ExecutionContext& ctx, bool pop) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register) return detail::memory_fault(ctx, detail::memory_address(ctx));
   const auto reg = ctx.instr.op_register(0);
   ctx.state.x87_mark_empty(x87_st_index(reg));
   if (pop && !ctx.state.x87_pop()) return x87_stack_underflow(ctx);
