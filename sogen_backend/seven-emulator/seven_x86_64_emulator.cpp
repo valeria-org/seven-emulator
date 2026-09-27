@@ -264,7 +264,7 @@ basic_block summarize_basic_block(const seven::CpuState& state, const seven::Mem
     block.instruction_count += 1;
     block.size += length;
 
-    const auto flow = iced_x86::InstructionExtensions::flow_control(instr.value());
+    const auto flow = instr.value().flow_control();
     if (flow != iced_x86::FlowControl::Next) {
       break;
     }
