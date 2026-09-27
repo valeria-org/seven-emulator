@@ -17,14 +17,14 @@ namespace {
     case iced_x86::Register::EBP: return iced_x86::Register::RBP;
     case iced_x86::Register::ESI: return iced_x86::Register::RSI;
     case iced_x86::Register::EDI: return iced_x86::Register::RDI;
-    case iced_x86::Register::R8_D: return iced_x86::Register::R8;
-    case iced_x86::Register::R9_D: return iced_x86::Register::R9;
-    case iced_x86::Register::R10_D: return iced_x86::Register::R10;
-    case iced_x86::Register::R11_D: return iced_x86::Register::R11;
-    case iced_x86::Register::R12_D: return iced_x86::Register::R12;
-    case iced_x86::Register::R13_D: return iced_x86::Register::R13;
-    case iced_x86::Register::R14_D: return iced_x86::Register::R14;
-    case iced_x86::Register::R15_D: return iced_x86::Register::R15;
+    case iced_x86::Register::R8D: return iced_x86::Register::R8;
+    case iced_x86::Register::R9D: return iced_x86::Register::R9;
+    case iced_x86::Register::R10D: return iced_x86::Register::R10;
+    case iced_x86::Register::R11D: return iced_x86::Register::R11;
+    case iced_x86::Register::R12D: return iced_x86::Register::R12;
+    case iced_x86::Register::R13D: return iced_x86::Register::R13;
+    case iced_x86::Register::R14D: return iced_x86::Register::R14;
+    case iced_x86::Register::R15D: return iced_x86::Register::R15;
     default:
       return reg;
   }
@@ -42,7 +42,7 @@ namespace {
 
 
 ExecutionResult read_near_target_width(ExecutionContext& ctx, std::size_t width, std::uint64_t& target) {
-  if (width == 8 && ctx.state.mode == ExecutionMode::long64 && ctx.instr.op_kind(0) == iced_x86::OpKind::REGISTER) {
+  if (width == 8 && ctx.state.mode == ExecutionMode::long64 && ctx.instr.op_kind(0) == iced_x86::OpKind::Register) {
     const auto reg = promote_gpr32_to_64(ctx.instr.op_register(0));
     target = detail::read_register(ctx.state, reg);
     return {};
@@ -143,7 +143,7 @@ ExecutionResult pop_operand_width(ExecutionContext& ctx, std::size_t width) {
   if (auto result = detail::write_operand_checked(ctx, 0, value, width); !result.ok()) {
     return result;
   }
-  if (ctx.instr.op_kind(0) == iced_x86::OpKind::REGISTER && ctx.instr.op_register(0) == iced_x86::Register::SS) {
+  if (ctx.instr.op_kind(0) == iced_x86::OpKind::Register && ctx.instr.op_register(0) == iced_x86::Register::SS) {
     ctx.state.debug_suppression = 1;
     if ((ctx.state.rflags & kFlagTF) != 0) ctx.state.pending_single_step = true;
     ctx.debug_hit_bits |= detail::debug_data_breakpoint_hits(ctx.state, old_sp, width, true, false);
@@ -187,7 +187,7 @@ ExecutionResult call_rm_width(ExecutionContext& ctx, std::size_t width) {
   if (auto result = read_near_target_width(ctx, width, target); !result.ok()) {
     return result;
   }
-  if (trace_call_rm_enabled() && ctx.instr.op_kind(0) == iced_x86::OpKind::MEMORY) {
+  if (trace_call_rm_enabled() && ctx.instr.op_kind(0) == iced_x86::OpKind::Memory) {
     std::fprintf(stderr,
                  "[seven-callrm] rip=0x%llx addr=0x%llx target=0x%llx next=0x%llx\n",
                  static_cast<unsigned long long>(ctx.state.rip),

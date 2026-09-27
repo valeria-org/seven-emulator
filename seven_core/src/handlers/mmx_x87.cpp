@@ -612,7 +612,7 @@ ExecutionResult handle_code_FLD_M80FP(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_FLD_STI(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || ctx.instr.op_kind(1) != iced_x86::OpKind::REGISTER) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || ctx.instr.op_kind(1) != iced_x86::OpKind::Register) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   if (!ctx.state.x87_push(ctx.state.x87_get(x87_st_index(ctx.instr.op_register(0))))) {

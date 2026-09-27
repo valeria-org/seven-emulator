@@ -12,7 +12,7 @@
 #include <iced_x86/code.hpp>
 #include <iced_x86/decoder.hpp>
 #include <iced_x86/instruction_info.hpp>
-#include <iced_x86/memory_size_info.hpp>
+#include <iced_x86/memory_size_ext.hpp>
 
 #include "seven/handler_helpers.hpp"
 #include "seven/handlers_fwd.hpp"
@@ -62,7 +62,7 @@ constexpr std::size_t kZmmWidth = 64;
 }
 
 [[nodiscard]] bool simd_profile_allows(const iced_x86::Instruction& instr) noexcept {
-  const auto encoding = iced_x86::InstructionExtensions::encoding(instr);
+  const auto encoding = instr.encoding();
   if (encoding == iced_x86::EncodingKind::EVEX && !kEnableAvx512) {
     return false;
   }
@@ -70,7 +70,7 @@ constexpr std::size_t kZmmWidth = 64;
     return false;
   }
   for (std::uint32_t i = 0; i < instr.op_count(); ++i) {
-    if (instr.op_kind(i) == iced_x86::OpKind::REGISTER &&
+    if (instr.op_kind(i) == iced_x86::OpKind::Register &&
         vector_width_for_register(instr.op_register(i)) > kVectorBytes) {
       return false;
     }
@@ -80,10 +80,10 @@ constexpr std::size_t kZmmWidth = 64;
 
 [[nodiscard]] iced_x86::Code normalize_reported_code(iced_x86::Code code) noexcept {
   switch (code) {
-    case iced_x86::Code::PUSHD_IMM8:
-      return iced_x86::Code::PUSHQ_IMM8;
-    case iced_x86::Code::PUSHD_IMM32:
-      return iced_x86::Code::PUSHQ_IMM32;
+    case iced_x86::Code::Pushd_imm8:
+      return iced_x86::Code::Pushq_imm8;
+    case iced_x86::Code::Pushd_imm32:
+      return iced_x86::Code::Pushq_imm32;
     default:
       return code;
   }
@@ -91,18 +91,18 @@ constexpr std::size_t kZmmWidth = 64;
 
 [[nodiscard]] std::optional<TrapKind> trap_kind_for_code(iced_x86::Code code) noexcept {
   switch (code) {
-    case iced_x86::Code::SYSCALL:
+    case iced_x86::Code::Syscall:
       return TrapKind::syscall;
-    case iced_x86::Code::CPUID:
+    case iced_x86::Code::Cpuid:
       return TrapKind::cpuid;
-    case iced_x86::Code::RDTSC:
+    case iced_x86::Code::Rdtsc:
       return TrapKind::rdtsc;
-    case iced_x86::Code::RDTSCP:
+    case iced_x86::Code::Rdtscp:
       return TrapKind::rdtscp;
-    case iced_x86::Code::INT1:
-    case iced_x86::Code::INT3:
-    case iced_x86::Code::INT_IMM8:
-    case iced_x86::Code::INTO:
+    case iced_x86::Code::Int1:
+    case iced_x86::Code::Int3:
+    case iced_x86::Code::Int_imm8:
+    case iced_x86::Code::Into:
       return TrapKind::interrupt;
     default:
       return std::nullopt;
@@ -229,7 +229,7 @@ void maybe_trace_semantics(const CpuState& state, const iced_x86::Instruction& i
       "[seven-trace] rip=0x%llx code=%u len=%u rax=0x%llx rbx=0x%llx rcx=0x%llx rdx=0x%llx rsp=0x%llx [rsp]=%s0x%llx [rsp+8]=%s0x%llx [rsp+c0]=%s0x%llx [rsp+c8]=%s0x%llx iat=%s0x%llx rbp=0x%llx rsi=0x%llx rdi=0x%llx r8=0x%llx r9=0x%llx cf=%u zf=%u sf=%u of=%u\n",
       static_cast<unsigned long long>(state.rip),
       static_cast<unsigned>(instr.code()),
-      static_cast<unsigned>(instr.length()),
+      static_cast<unsigned>(instr.len()),
       static_cast<unsigned long long>(state.gpr[0]),
       static_cast<unsigned long long>(state.gpr[3]),
       static_cast<unsigned long long>(state.gpr[1]),
@@ -265,10 +265,10 @@ struct DebugMemoryAccess {
 
 [[nodiscard]] bool op_access_reads(iced_x86::OpAccess access) noexcept {
   switch (access) {
-    case iced_x86::OpAccess::READ:
-    case iced_x86::OpAccess::COND_READ:
-    case iced_x86::OpAccess::READ_WRITE:
-    case iced_x86::OpAccess::READ_COND_WRITE:
+    case iced_x86::OpAccess::Read:
+    case iced_x86::OpAccess::CondRead:
+    case iced_x86::OpAccess::ReadWrite:
+    case iced_x86::OpAccess::ReadCondWrite:
       return true;
     default:
       return false;
@@ -277,10 +277,10 @@ struct DebugMemoryAccess {
 
 [[nodiscard]] bool op_access_writes(iced_x86::OpAccess access) noexcept {
   switch (access) {
-    case iced_x86::OpAccess::WRITE:
-    case iced_x86::OpAccess::COND_WRITE:
-    case iced_x86::OpAccess::READ_WRITE:
-    case iced_x86::OpAccess::READ_COND_WRITE:
+    case iced_x86::OpAccess::Write:
+    case iced_x86::OpAccess::CondWrite:
+    case iced_x86::OpAccess::ReadWrite:
+    case iced_x86::OpAccess::ReadCondWrite:
       return true;
     default:
       return false;
@@ -312,7 +312,7 @@ struct DebugMemoryAccess {
   iced_x86::InstructionInfoFactory info_factory;
   const auto& info = info_factory.info(instr);
   for (const auto& used_mem : info.used_memory()) {
-    const auto access = used_mem.access;
+    const auto access = used_mem.access();
     const bool is_read = op_access_reads(access);
     const bool is_write = op_access_writes(access);
     if (!is_read && !is_write) {
@@ -320,21 +320,21 @@ struct DebugMemoryAccess {
     }
 
     std::uint64_t address = 0;
-    if (used_mem.base != iced_x86::Register::NONE) {
-      address += detail::read_register(state, used_mem.base);
+    if (used_mem.base() != iced_x86::Register::None) {
+      address += detail::read_register(state, used_mem.base());
     }
-    if (used_mem.index != iced_x86::Register::NONE) {
-      address += detail::read_register(state, used_mem.index) * used_mem.scale;
+    if (used_mem.index() != iced_x86::Register::None) {
+      address += detail::read_register(state, used_mem.index()) * used_mem.scale();
     }
-    address += used_mem.displacement;
-    if (used_mem.segment == iced_x86::Register::FS) {
+    address += used_mem.displacement();
+    if (used_mem.segment() == iced_x86::Register::FS) {
       address += state.fs_base;
-    } else if (used_mem.segment == iced_x86::Register::GS) {
+    } else if (used_mem.segment() == iced_x86::Register::GS) {
       address += state.gs_base;
     }
     address = mask_linear_address(state, address);
 
-    const auto size = std::max<std::size_t>(1u, iced_x86::memory_size_ext::get_size(used_mem.memory_size));
+    const auto size = std::max<std::size_t>(1u, iced_x86::memory_size_ext::size(used_mem.memory_size()));
     accesses.push_back(DebugMemoryAccess{address, size, is_read, is_write});
   }
   return accesses;
@@ -540,7 +540,7 @@ ExecutionResult Executor::step(CpuState& state, Memory& memory) {
                            cache_entry.mode == state.mode;
 
     if (!cache_hit) [[unlikely]] {
-      std::array<std::uint8_t, iced_x86::IcedConstants::_MAX_INSTRUCTION_LENGTH> bytes{};
+      std::array<std::uint8_t, iced_x86::IcedConstants::MAX_INSTRUCTION_LENGTH> bytes{};
       const std::uint8_t* decode_bytes = bytes.data();
       std::size_t decode_size = bytes.size();
       bool fetched = false;
@@ -578,13 +578,14 @@ ExecutionResult Executor::step(CpuState& state, Memory& memory) {
         }
       }
 
-      iced_x86::Decoder decoder(
+      iced_x86::Decoder decoder = iced_x86::Decoder::with_ip(
           decoder_bitness(state.mode),
-          std::span<const std::uint8_t>(decode_bytes, decode_size),
+          decode_bytes,
+          decode_size,
           state.rip,
           iced_x86::DecoderOptions::NO_INVALID_CHECK);
-      const auto decoded = decoder.decode();
-      if (!decoded.has_value()) {
+      const iced_x86::Instruction decoded = decoder.decode();
+      if (decoded.code() == iced_x86::Code::INVALID) {
         if (trace_semantics_) {
           if (decode_bytes != bytes.data()) {
             std::memcpy(bytes.data(), decode_bytes, bytes.size());
@@ -615,12 +616,12 @@ ExecutionResult Executor::step(CpuState& state, Memory& memory) {
       cache_entry.rip = state.rip;
       cache_entry.code_epoch = code_epoch;
       cache_entry.mode = state.mode;
-      cache_entry.instr = decoded.value();
+      cache_entry.instr = decoded;
       cache_entry.simd_allowed = simd_profile_allows(cache_entry.instr);
       cache_entry.reported_code = normalize_reported_code(cache_entry.instr.code());
       const auto trap = trap_kind_for_code(cache_entry.instr.code());
       cache_entry.trap_kind = trap.has_value() ? static_cast<std::uint8_t>(*trap) : 0xFFu;
-      cache_entry.instruction_length = std::max<std::uint32_t>(1u, cache_entry.instr.length());
+      cache_entry.instruction_length = std::max<std::uint32_t>(1u, cache_entry.instr.len());
       cache_entry.valid = can_use_decode_cache;
     }
 
@@ -800,8 +801,8 @@ ExecutionResult Executor::step(CpuState& state, Memory& memory) {
     // 4-byte handler (rsp -= 4) -- corrupting the stack for any VMProtect VM that pushes an imm.
     const auto code = reported_code;
     switch (code) {
-#define KUBERA_CODE(code) \
-    case iced_x86::Code::code: result = handlers::handle_code_##code(ctx); break;
+#define KUBERA_CODE(code, name) \
+    case iced_x86::Code::code: result = handlers::handle_code_##name(ctx); break;
 #include "seven/handled_codes.def"
 #undef KUBERA_CODE
       default:
@@ -1215,7 +1216,7 @@ void Executor::refresh_hook_flags() noexcept {
 }
 
 std::size_t Executor::supported_code_count() const noexcept {
-#define KUBERA_CODE(code) +1
+#define KUBERA_CODE(code, name) +1
   static constexpr std::size_t kSupportedCodeCount = 0
 #include "seven/handled_codes.def"
       ;

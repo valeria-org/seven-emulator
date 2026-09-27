@@ -1,3 +1,0 @@
-[submodule "iced_x86"]
-	path = iced_x86
-	url = https://github.com/binsnake/iced-cpp

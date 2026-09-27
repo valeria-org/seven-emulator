@@ -89,7 +89,7 @@ big_uint read_mem(ExecutionContext& ctx, std::uint64_t address, std::size_t widt
 
 big_uint read_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::size_t width, bool* ok) {
   const auto kind = ctx.instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     const auto reg = ctx.instr.op_register(operand_index);
     if (!is_vector_register(reg)) {
       if (ok) *ok = false;
@@ -98,7 +98,7 @@ big_uint read_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::s
     if (ok) *ok = true;
     return read_vec(ctx.state, reg) & mask(width);
   }
-  if (kind == iced_x86::OpKind::MEMORY) {
+  if (kind == iced_x86::OpKind::Memory) {
     return read_mem(ctx, detail::memory_address(ctx), width, ok);
   }
   if (ok) *ok = false;
@@ -182,7 +182,7 @@ void set_sse_cmp_flags(CpuState& state, int relation) {
 
 template <typename T, typename Fn>
 ExecutionResult packed_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -211,7 +211,7 @@ ExecutionResult packed_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = 
 
 template <typename T, typename Fn>
 ExecutionResult vex_packed_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -241,7 +241,7 @@ ExecutionResult vex_packed_binary(ExecutionContext& ctx, Fn&& fn, bool zero_uppe
 
 template <typename T, typename Fn>
 ExecutionResult scalar_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -266,7 +266,7 @@ ExecutionResult scalar_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = 
 
 template <typename T, typename Fn>
 ExecutionResult vex_scalar_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -292,7 +292,7 @@ ExecutionResult vex_scalar_binary(ExecutionContext& ctx, Fn&& fn, bool zero_uppe
 
 template <typename T, typename Fn>
 ExecutionResult packed_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto dst_reg = ctx.instr.op_register(0);
@@ -316,7 +316,7 @@ ExecutionResult packed_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = f
 
 template <typename T, typename Fn>
 ExecutionResult vex_packed_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -342,7 +342,7 @@ ExecutionResult vex_packed_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper
 
 template <typename T, typename Fn>
 ExecutionResult scalar_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto dst_reg = ctx.instr.op_register(0);
@@ -362,7 +362,7 @@ ExecutionResult scalar_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = f
 
 template <typename T, typename Fn>
 ExecutionResult vex_scalar_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -385,7 +385,7 @@ ExecutionResult vex_scalar_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper
 }
 
 ExecutionResult packed_logic(ExecutionContext& ctx, std::uint32_t lhs_index, std::uint32_t rhs_index, std::uint8_t op, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -407,7 +407,7 @@ ExecutionResult packed_logic(ExecutionContext& ctx, std::uint32_t lhs_index, std
 
 template <typename T>
 ExecutionResult scalar_compare(ExecutionContext& ctx, bool quiet) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -621,7 +621,7 @@ std::uint32_t compare_exceptions(unsigned predicate, T lhs, T rhs) {
 
 template <typename T>
 ExecutionResult packed_compare_mask(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -650,7 +650,7 @@ ExecutionResult packed_compare_mask(ExecutionContext& ctx) {
 
 template <typename T>
 ExecutionResult scalar_compare_mask(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -675,7 +675,7 @@ ExecutionResult scalar_compare_mask(ExecutionContext& ctx) {
 
 template <typename T>
 ExecutionResult packed_addsub(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -705,7 +705,7 @@ ExecutionResult packed_addsub(ExecutionContext& ctx) {
 
 template <typename T>
 ExecutionResult packed_horizontal(ExecutionContext& ctx, bool subtract) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -809,7 +809,7 @@ ExecutionResult handle_code_CMPPD_XMM_XMMM128_IMM8(ExecutionContext& ctx) { retu
 ExecutionResult handle_code_CMPSD_XMM_XMMM64_IMM8(ExecutionContext& ctx) { return scalar_compare_mask<double>(ctx); }
 
 ExecutionResult handle_code_CVTPS2PD_XMM_XMMM64(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -833,7 +833,7 @@ ExecutionResult handle_code_CVTPS2PD_XMM_XMMM64(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTPD2PS_XMM_XMMM128(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -857,7 +857,7 @@ ExecutionResult handle_code_CVTPD2PS_XMM_XMMM128(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTDQ2PD_XMM_XMMM64(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -874,7 +874,7 @@ ExecutionResult handle_code_CVTDQ2PD_XMM_XMMM64(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTPD2DQ_XMM_XMMM128(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -898,7 +898,7 @@ ExecutionResult handle_code_CVTPD2DQ_XMM_XMMM128(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTTPD2DQ_XMM_XMMM128(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -922,7 +922,7 @@ ExecutionResult handle_code_CVTTPD2DQ_XMM_XMMM128(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTSS2SD_XMM_XMMM32(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -943,7 +943,7 @@ ExecutionResult handle_code_CVTSS2SD_XMM_XMMM32(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTSD2SS_XMM_XMMM64(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -964,7 +964,7 @@ ExecutionResult handle_code_CVTSD2SS_XMM_XMMM64(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTSI2SS_XMM_RM32(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -984,7 +984,7 @@ ExecutionResult handle_code_CVTSI2SS_XMM_RM32(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTSI2SS_XMM_RM64(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -1005,7 +1005,7 @@ ExecutionResult handle_code_CVTSI2SS_XMM_RM64(ExecutionContext& ctx) {
 
 
 ExecutionResult handle_code_CVTSI2SD_XMM_RM32(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -1025,7 +1025,7 @@ ExecutionResult handle_code_CVTSI2SD_XMM_RM32(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTSI2SD_XMM_RM64(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -1101,12 +1101,12 @@ ExecutionResult handle_code_CVTTSD2SI_R64_XMMM64(ExecutionContext& ctx) {
 }
 
 ExecutionResult handle_code_CVTPI2PD_XMM_MMM64(ExecutionContext& ctx) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = true;
   std::uint64_t src = 0;
-  if (ctx.instr.op_kind(1) == iced_x86::OpKind::REGISTER && is_mmx_register(ctx.instr.op_register(1))) {
+  if (ctx.instr.op_kind(1) == iced_x86::OpKind::Register && is_mmx_register(ctx.instr.op_register(1))) {
     src = ctx.state.mmx_get(mmx_index(ctx.instr.op_register(1)));
   } else {
     src = detail::read_operand(ctx, 1, 8, &ok);

@@ -8,7 +8,7 @@ namespace seven::handlers {
 
 static ExecutionResult smsw_impl(ExecutionContext& ctx, std::size_t reg_width) {
   const std::uint64_t msw = ctx.state.cr[0] & 0xFFFFu;
-  const bool is_mem = ctx.instr.op_kind(0) == iced_x86::OpKind::MEMORY;
+  const bool is_mem = ctx.instr.op_kind(0) == iced_x86::OpKind::Memory;
   const std::size_t width = is_mem ? 2 : reg_width;
   if (!detail::write_operand(ctx, 0, msw, width)) {
     return {StopReason::page_fault, 0, ExceptionInfo{StopReason::page_fault, detail::memory_address(ctx), 0}, ctx.instr.code()};

@@ -109,32 +109,15 @@ if(SEVEN_ENABLE_LTO)
   endif()
 endif()
 
-set(ICED_X86_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/block_encoder.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/decoder.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/encoder.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/encoder_handlers.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/encoder_methods.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/encoder_ops.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/fastfmt.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/gas_formatter.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/handlers.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/instruction.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/instruction_create.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/instruction_info.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/intel_formatter.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/masm_formatter.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/memory_size_info.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/mvex_info_data.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/nasm_formatter.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/op_code_info.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/register_info.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/table_deserializer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/iced_x86/src/tables.cpp
+file(GLOB_RECURSE ICED_X86_SOURCES CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src/*.cpp"
 )
 
 add_library(iced_x86 STATIC ${ICED_X86_SOURCES})
 target_include_directories(iced_x86 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/include")
+# iced's own sources include its private headers as "internal/...".
+target_include_directories(iced_x86 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/iced_x86/src")
+target_compile_features(iced_x86 PUBLIC cxx_std_17)
 if(MSVC)
   target_compile_options(iced_x86 PRIVATE /WX-)
 endif()
@@ -142,7 +125,6 @@ target_compile_definitions(
   iced_x86
   PUBLIC
     _CRT_SECURE_NO_WARNINGS
-    ICED_X86_CONSTEXPR_HANDLERS=0
 )
 
 file(GLOB_RECURSE SEVEN_CORE_SOURCES CONFIGURE_DEPENDS

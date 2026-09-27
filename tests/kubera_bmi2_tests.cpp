@@ -10,7 +10,7 @@
 #include <iced_x86/code.hpp>
 #include <iced_x86/encoder.hpp>
 #include <iced_x86/instruction.hpp>
-#include <iced_x86/instruction_create.hpp>
+#include <iced_x86/instruction.hpp>
 #include <iced_x86/op_kind.hpp>
 #include <iced_x86/register.hpp>
 
@@ -315,9 +315,9 @@ TEST(Bmi2, DecodeAndnAndFlags) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src1_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto src2_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_ANDN_R32_R32_RM32 : iced_x86::Code::VEX_ANDN_R64_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Andn_r32_r32_rm32 : iced_x86::Code::VEX_Andn_r64_r64_rm64;
     const auto expected = (~src1) & src2 & bits_to_mask(bits);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src1_reg, src2_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src1_reg, src2_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -350,9 +350,9 @@ TEST(Bmi2, DecodeBlsiBlsmskBlsr) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSI_R32_RM32 : iced_x86::Code::VEX_BLSI_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsi_r32_rm32 : iced_x86::Code::VEX_Blsi_r64_rm64;
     const auto expected = (src & -src) & bits_to_mask(bits);
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, src_reg);
+    const auto instr = iced_x86::Instruction::with2(code, dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -374,9 +374,9 @@ TEST(Bmi2, DecodeBlsiBlsmskBlsr) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSR_R32_RM32 : iced_x86::Code::VEX_BLSR_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsr_r32_rm32 : iced_x86::Code::VEX_Blsr_r64_rm64;
     const auto expected = (src & (src - 1ull)) & bits_to_mask(bits);
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, src_reg);
+    const auto instr = iced_x86::Instruction::with2(code, dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -398,9 +398,9 @@ TEST(Bmi2, DecodeBlsiBlsmskBlsr) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSMSK_R32_RM32 : iced_x86::Code::VEX_BLSMSK_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsmsk_r32_rm32 : iced_x86::Code::VEX_Blsmsk_r64_rm64;
     const auto expected = (src ^ (src - 1ull)) & bits_to_mask(bits);
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, src_reg);
+    const auto instr = iced_x86::Instruction::with2(code, dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -435,9 +435,9 @@ TEST(Bmi2, DecodeBzhiAndBextr) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto idx_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BZHI_R32_RM32_R32 : iced_x86::Code::VEX_BZHI_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Bzhi_r32_rm32_r32 : iced_x86::Code::VEX_Bzhi_r64_rm64_r64;
     const auto expected = bzhi_ref(bits, src, index);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src_reg, idx_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src_reg, idx_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -463,9 +463,9 @@ TEST(Bmi2, DecodeBzhiAndBextr) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto control_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BEXTR_R32_RM32_R32 : iced_x86::Code::VEX_BEXTR_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Bextr_r32_rm32_r32 : iced_x86::Code::VEX_Bextr_r64_rm64_r64;
     const auto expected = bextr_ref(src, control, bits);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src_reg, control_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src_reg, control_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -505,8 +505,8 @@ TEST(Bmi2, DecodeMulx) {
     const auto high_dst = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto src_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     const auto implicit_src = bits == 32 ? iced_x86::Register::EDX : iced_x86::Register::RDX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_MULX_R32_R32_RM32 : iced_x86::Code::VEX_MULX_R64_R64_RM64;
-    const auto instr = iced_x86::InstructionFactory::with3(code, high_dst, low_dst, src_reg);
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Mulx_r32_r32_rm32 : iced_x86::Code::VEX_Mulx_r64_r64_rm64;
+    const auto instr = iced_x86::Instruction::with3(code, high_dst, low_dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -538,10 +538,10 @@ TEST(Bmi2, DecodePdepPext) {
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto mask_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     const auto code = is_dep
-        ? (bits == 32 ? iced_x86::Code::VEX_PDEP_R32_R32_RM32 : iced_x86::Code::VEX_PDEP_R64_R64_RM64)
-        : (bits == 32 ? iced_x86::Code::VEX_PEXT_R32_R32_RM32 : iced_x86::Code::VEX_PEXT_R64_R64_RM64);
+        ? (bits == 32 ? iced_x86::Code::VEX_Pdep_r32_r32_rm32 : iced_x86::Code::VEX_Pdep_r64_r64_rm64)
+        : (bits == 32 ? iced_x86::Code::VEX_Pext_r32_r32_rm32 : iced_x86::Code::VEX_Pext_r64_r64_rm64);
     const auto expected = is_dep ? pdep_ref(src, mask, bits) : pext_ref(src, mask, bits);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src_reg, mask_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src_reg, mask_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -571,10 +571,10 @@ TEST(Bmi2, DecodeShiftRotateFamilies) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_RORX_R32_RM32_IMM8 : iced_x86::Code::VEX_RORX_R64_RM64_IMM8;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Rorx_r32_rm32_imm8 : iced_x86::Code::VEX_Rorx_r64_rm64_imm8;
     const auto expected = ror_ref(src, count, bits);
-    auto instr = iced_x86::InstructionFactory::with2(code, dst, src_reg);
-    instr.set_op2_kind(iced_x86::OpKind::IMMEDIATE8);
+    auto instr = iced_x86::Instruction::with2(code, dst, src_reg).value();
+    instr.set_op2_kind(iced_x86::OpKind::Immediate8);
     instr.set_immediate8(count);
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
@@ -594,9 +594,9 @@ TEST(Bmi2, DecodeShiftRotateFamilies) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto count_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_SARX_R32_RM32_R32 : iced_x86::Code::VEX_SARX_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Sarx_r32_rm32_r32 : iced_x86::Code::VEX_Sarx_r64_rm64_r64;
     const auto expected = sarx_ref(src, count, bits);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src_reg, count_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src_reg, count_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -619,10 +619,10 @@ TEST(Bmi2, DecodeShiftRotateFamilies) {
     const auto src_reg = bits == 32 ? iced_x86::Register::EDX : iced_x86::Register::RDX;
     const auto count_reg = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto code = is_shlx
-        ? (bits == 32 ? iced_x86::Code::VEX_SHLX_R32_RM32_R32 : iced_x86::Code::VEX_SHLX_R64_RM64_R64)
-        : (bits == 32 ? iced_x86::Code::VEX_SHRX_R32_RM32_R32 : iced_x86::Code::VEX_SHRX_R64_RM64_R64);
+        ? (bits == 32 ? iced_x86::Code::VEX_Shlx_r32_rm32_r32 : iced_x86::Code::VEX_Shlx_r64_rm64_r64)
+        : (bits == 32 ? iced_x86::Code::VEX_Shrx_r32_rm32_r32 : iced_x86::Code::VEX_Shrx_r64_rm64_r64);
     const auto expected = is_shlx ? shl_ref(src, count, bits) : shr_ref(src, count, bits);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src_reg, count_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src_reg, count_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -650,13 +650,13 @@ TEST(Bmi2, DecodeShiftRotateFamilies) {
 
 TEST(Bmi2, DecodeBoundaryAndZeroInputCases) {
   const auto run_andn = [&](std::size_t bits, std::uint64_t src1, std::uint64_t src2, std::string_view label) {
-    const auto code = bits == 32 ? iced_x86::Code::VEX_ANDN_R32_R32_RM32 : iced_x86::Code::VEX_ANDN_R64_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Andn_r32_r32_rm32 : iced_x86::Code::VEX_Andn_r64_r64_rm64;
     const auto expected = mask_value(bits, (~src1) & src2);
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src1_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto src2_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     std::vector<std::uint8_t> bytes;
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src1_reg, src2_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src1_reg, src2_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -688,9 +688,9 @@ TEST(Bmi2, DecodeBlsiBlsrBlsmskZeroAndBoundaries) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSI_R32_RM32 : iced_x86::Code::VEX_BLSI_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsi_r32_rm32 : iced_x86::Code::VEX_Blsi_r64_rm64;
     const auto expected = mask_value(bits, src & -src);
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, src_reg);
+    const auto instr = iced_x86::Instruction::with2(code, dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -712,9 +712,9 @@ TEST(Bmi2, DecodeBlsiBlsrBlsmskZeroAndBoundaries) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSR_R32_RM32 : iced_x86::Code::VEX_BLSR_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsr_r32_rm32 : iced_x86::Code::VEX_Blsr_r64_rm64;
     const auto expected = mask_value(bits, src & (src - 1ull));
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, src_reg);
+    const auto instr = iced_x86::Instruction::with2(code, dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -736,9 +736,9 @@ TEST(Bmi2, DecodeBlsiBlsrBlsmskZeroAndBoundaries) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSMSK_R32_RM32 : iced_x86::Code::VEX_BLSMSK_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsmsk_r32_rm32 : iced_x86::Code::VEX_Blsmsk_r64_rm64;
     const auto expected = mask_value(bits, src ^ (src - 1ull));
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, src_reg);
+    const auto instr = iced_x86::Instruction::with2(code, dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single(
       bytes,
@@ -770,10 +770,10 @@ TEST(Bmi2, DecodeBzhiBextrMemoryOperands) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto idx_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BZHI_R32_RM32_R32 : iced_x86::Code::VEX_BZHI_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Bzhi_r32_rm32_r32 : iced_x86::Code::VEX_Bzhi_r64_rm64_r64;
     const auto mem = iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0);
     const auto expected = bzhi_ref(bits, src, index);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, mem, idx_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, mem, idx_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single_with_memory(
       bytes,
@@ -798,10 +798,10 @@ TEST(Bmi2, DecodeBzhiBextrMemoryOperands) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto control_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BEXTR_R32_RM32_R32 : iced_x86::Code::VEX_BEXTR_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Bextr_r32_rm32_r32 : iced_x86::Code::VEX_Bextr_r64_rm64_r64;
     const auto mem = iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0);
     const auto expected = bextr_ref(mask_value(bits, src), mask_value(bits, control), bits);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, mem, control_reg);
+    const auto instr = iced_x86::Instruction::with3(code, dst, mem, control_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single_with_memory(
       bytes,
@@ -836,9 +836,9 @@ TEST(Bmi2, DecodeMulxPdepPextMemoryOperands) {
     const auto low_dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto high_dst = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto implicit_src = bits == 32 ? iced_x86::Register::EDX : iced_x86::Register::RDX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_MULX_R32_R32_RM32 : iced_x86::Code::VEX_MULX_R64_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Mulx_r32_r32_rm32 : iced_x86::Code::VEX_Mulx_r64_r64_rm64;
     const auto mem = iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0);
-    const auto instr = iced_x86::InstructionFactory::with3(code, high_dst, low_dst, mem);
+    const auto instr = iced_x86::Instruction::with3(code, high_dst, low_dst, mem).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single_with_memory(
       bytes,
@@ -864,12 +864,12 @@ TEST(Bmi2, DecodeMulxPdepPextMemoryOperands) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto code = is_dep
-      ? (bits == 32 ? iced_x86::Code::VEX_PDEP_R32_R32_RM32 : iced_x86::Code::VEX_PDEP_R64_R64_RM64)
-      : (bits == 32 ? iced_x86::Code::VEX_PEXT_R32_R32_RM32 : iced_x86::Code::VEX_PEXT_R64_R64_RM64);
+      ? (bits == 32 ? iced_x86::Code::VEX_Pdep_r32_r32_rm32 : iced_x86::Code::VEX_Pdep_r64_r64_rm64)
+      : (bits == 32 ? iced_x86::Code::VEX_Pext_r32_r32_rm32 : iced_x86::Code::VEX_Pext_r64_r64_rm64);
     const auto mem = iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0);
     const auto expected = is_dep ? pdep_ref(mask_value(bits, src), mask_value(bits, mask), bits)
                                 : pext_ref(mask_value(bits, src), mask_value(bits, mask), bits);
-    const auto instr = iced_x86::InstructionFactory::with3(code, dst, src_reg, mem);
+    const auto instr = iced_x86::Instruction::with3(code, dst, src_reg, mem).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single_with_memory(
       bytes,
@@ -901,8 +901,8 @@ TEST(Bmi2, DecodeBlsiBlsrBlsmskMemorySource) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto mem = iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RBX, 0);
     const auto expected = mask_value(bits, src & -src);
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSI_R32_RM32 : iced_x86::Code::VEX_BLSI_R64_RM64;
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, mem);
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsi_r32_rm32 : iced_x86::Code::VEX_Blsi_r64_rm64;
+    const auto instr = iced_x86::Instruction::with2(code, dst, mem).value();
     std::vector<std::uint8_t> bytes;
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single_with_memory(
@@ -930,8 +930,8 @@ TEST(Bmi2, DecodeBlsiBlsrBlsmskMemorySource) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto mem = iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RBX, 0);
     const auto expected = mask_value(bits, src & (src - 1ull));
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSR_R32_RM32 : iced_x86::Code::VEX_BLSR_R64_RM64;
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, mem);
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsr_r32_rm32 : iced_x86::Code::VEX_Blsr_r64_rm64;
+    const auto instr = iced_x86::Instruction::with2(code, dst, mem).value();
     std::vector<std::uint8_t> bytes;
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single_with_memory(
@@ -959,8 +959,8 @@ TEST(Bmi2, DecodeBlsiBlsrBlsmskMemorySource) {
     const auto dst = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     const auto mem = iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RBX, 0);
     const auto expected = mask_value(bits, src ^ (src - 1ull));
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BLSMSK_R32_RM32 : iced_x86::Code::VEX_BLSMSK_R64_RM64;
-    const auto instr = iced_x86::InstructionFactory::with2(code, dst, mem);
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Blsmsk_r32_rm32 : iced_x86::Code::VEX_Blsmsk_r64_rm64;
+    const auto instr = iced_x86::Instruction::with2(code, dst, mem).value();
     std::vector<std::uint8_t> bytes;
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return run_single_with_memory(
@@ -1012,11 +1012,11 @@ TEST(Bmi2, DecodeBzhiBextrRegAndMemMatrix) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto idx_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BZHI_R32_RM32_R32 : iced_x86::Code::VEX_BZHI_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Bzhi_r32_rm32_r32 : iced_x86::Code::VEX_Bzhi_r64_rm64_r64;
     const auto expected = bzhi_ref(bits, src, index);
     const auto instr = use_mem
-      ? iced_x86::InstructionFactory::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), idx_reg)
-      : iced_x86::InstructionFactory::with3(code, dst, (bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX), idx_reg);
+      ? iced_x86::Instruction::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), idx_reg).value()
+      : iced_x86::Instruction::with3(code, dst, (bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX), idx_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return use_mem
       ? run_single_with_memory(
@@ -1054,11 +1054,11 @@ TEST(Bmi2, DecodeBzhiBextrRegAndMemMatrix) {
     std::vector<std::uint8_t> bytes;
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto control_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_BEXTR_R32_RM32_R32 : iced_x86::Code::VEX_BEXTR_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Bextr_r32_rm32_r32 : iced_x86::Code::VEX_Bextr_r64_rm64_r64;
     const auto expected = bextr_ref(mask_value(bits, src), mask_value(bits, control), bits);
     const auto instr = use_mem
-      ? iced_x86::InstructionFactory::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), control_reg)
-      : iced_x86::InstructionFactory::with3(code, dst, (bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX), control_reg);
+      ? iced_x86::Instruction::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), control_reg).value()
+      : iced_x86::Instruction::with3(code, dst, (bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX), control_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return use_mem
       ? run_single_with_memory(
@@ -1122,13 +1122,13 @@ TEST(Bmi2, DecodeShiftRotateMemSourceMatrix) {
 
   const auto run_rorx = [&](std::size_t bits, std::uint64_t src, std::uint64_t count, bool use_mem, const std::string& label) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_RORX_R32_RM32_IMM8 : iced_x86::Code::VEX_RORX_R64_RM64_IMM8;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Rorx_r32_rm32_imm8 : iced_x86::Code::VEX_Rorx_r64_rm64_imm8;
     const auto expected = ror_ref(mask_value(bits, src), count, bits);
     std::vector<std::uint8_t> bytes;
     auto instr = use_mem
-      ? iced_x86::InstructionFactory::with2(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0))
-      : iced_x86::InstructionFactory::with2(code, dst, (bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX));
-    instr.set_op2_kind(iced_x86::OpKind::IMMEDIATE8);
+      ? iced_x86::Instruction::with2(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0)).value()
+      : iced_x86::Instruction::with2(code, dst, (bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX)).value();
+    instr.set_op2_kind(iced_x86::OpKind::Immediate8);
     instr.set_immediate8(static_cast<std::uint8_t>(count));
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return use_mem
@@ -1164,13 +1164,13 @@ TEST(Bmi2, DecodeShiftRotateMemSourceMatrix) {
     const auto src_reg = bits == 32 ? iced_x86::Register::EDX : iced_x86::Register::RDX;
     const auto count_reg = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto code = do_shlx
-        ? (bits == 32 ? iced_x86::Code::VEX_SHLX_R32_RM32_R32 : iced_x86::Code::VEX_SHLX_R64_RM64_R64)
-        : (bits == 32 ? iced_x86::Code::VEX_SHRX_R32_RM32_R32 : iced_x86::Code::VEX_SHRX_R64_RM64_R64);
+        ? (bits == 32 ? iced_x86::Code::VEX_Shlx_r32_rm32_r32 : iced_x86::Code::VEX_Shlx_r64_rm64_r64)
+        : (bits == 32 ? iced_x86::Code::VEX_Shrx_r32_rm32_r32 : iced_x86::Code::VEX_Shrx_r64_rm64_r64);
     const auto expected = do_shlx ? shl_ref(mask_value(bits, src), count, bits) : shr_ref(mask_value(bits, src), count, bits);
     std::vector<std::uint8_t> bytes;
     const auto instr = use_mem
-      ? iced_x86::InstructionFactory::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), count_reg)
-      : iced_x86::InstructionFactory::with3(code, dst, src_reg, count_reg);
+      ? iced_x86::Instruction::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), count_reg).value()
+      : iced_x86::Instruction::with3(code, dst, src_reg, count_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return use_mem
       ? run_single_with_memory(
@@ -1206,12 +1206,12 @@ TEST(Bmi2, DecodeShiftRotateMemSourceMatrix) {
     const auto dst = bits == 32 ? iced_x86::Register::EAX : iced_x86::Register::RAX;
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto count_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_SARX_R32_RM32_R32 : iced_x86::Code::VEX_SARX_R64_RM64_R64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Sarx_r32_rm32_r32 : iced_x86::Code::VEX_Sarx_r64_rm64_r64;
     const auto expected = sarx_ref(mask_value(bits, src), count, bits);
     std::vector<std::uint8_t> bytes;
     const auto instr = use_mem
-      ? iced_x86::InstructionFactory::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), count_reg)
-      : iced_x86::InstructionFactory::with3(code, dst, src_reg, count_reg);
+      ? iced_x86::Instruction::with3(code, dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0), count_reg).value()
+      : iced_x86::Instruction::with3(code, dst, src_reg, count_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return use_mem
       ? run_single_with_memory(
@@ -1277,10 +1277,10 @@ TEST(Bmi2, DecodeMulxPdepPextMixedSourceRandom) {
     const auto high_dst = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto src_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     const auto implicit_src = bits == 32 ? iced_x86::Register::EDX : iced_x86::Register::RDX;
-    const auto code = bits == 32 ? iced_x86::Code::VEX_MULX_R32_R32_RM32 : iced_x86::Code::VEX_MULX_R64_R64_RM64;
+    const auto code = bits == 32 ? iced_x86::Code::VEX_Mulx_r32_r32_rm32 : iced_x86::Code::VEX_Mulx_r64_r64_rm64;
     const auto instr = use_mem
-      ? iced_x86::InstructionFactory::with3(code, high_dst, low_dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0))
-      : iced_x86::InstructionFactory::with3(code, high_dst, low_dst, src_reg);
+      ? iced_x86::Instruction::with3(code, high_dst, low_dst, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0)).value()
+      : iced_x86::Instruction::with3(code, high_dst, low_dst, src_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return use_mem
       ? run_single_with_memory(
@@ -1320,13 +1320,13 @@ TEST(Bmi2, DecodeMulxPdepPextMixedSourceRandom) {
     const auto src_reg = bits == 32 ? iced_x86::Register::EBX : iced_x86::Register::RBX;
     const auto mask_reg = bits == 32 ? iced_x86::Register::ECX : iced_x86::Register::RCX;
     const auto code = is_dep
-      ? (bits == 32 ? iced_x86::Code::VEX_PDEP_R32_R32_RM32 : iced_x86::Code::VEX_PDEP_R64_R64_RM64)
-      : (bits == 32 ? iced_x86::Code::VEX_PEXT_R32_R32_RM32 : iced_x86::Code::VEX_PEXT_R64_R64_RM64);
+      ? (bits == 32 ? iced_x86::Code::VEX_Pdep_r32_r32_rm32 : iced_x86::Code::VEX_Pdep_r64_r64_rm64)
+      : (bits == 32 ? iced_x86::Code::VEX_Pext_r32_r32_rm32 : iced_x86::Code::VEX_Pext_r64_r64_rm64);
     const auto expected = is_dep ? pdep_ref(mask_value(bits, src), mask_value(bits, mask), bits)
                                 : pext_ref(mask_value(bits, src), mask_value(bits, mask), bits);
     const auto instr = use_mem
-      ? iced_x86::InstructionFactory::with3(code, dst, src_reg, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0))
-      : iced_x86::InstructionFactory::with3(code, dst, src_reg, mask_reg);
+      ? iced_x86::Instruction::with3(code, dst, src_reg, iced_x86::MemoryOperand::with_base_displ(iced_x86::Register::RAX, 0)).value()
+      : iced_x86::Instruction::with3(code, dst, src_reg, mask_reg).value();
     EXPECT_TRUE(encode_to_bytes(instr, bytes, label));
     return use_mem
       ? run_single_with_memory(

@@ -6,7 +6,7 @@
 #include <limits>
 #include <type_traits>
 
-#include <iced_x86/memory_size_info.hpp>
+#include <iced_x86/memory_size_ext.hpp>
 
 #include "seven/handler_helpers.hpp"
 
@@ -85,7 +85,7 @@ big_uint read_mem(ExecutionContext& ctx, std::uint64_t address, std::size_t widt
 
 big_uint read_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::size_t width, bool* ok) {
   const auto kind = ctx.instr.op_kind(operand_index);
-  if (kind == iced_x86::OpKind::REGISTER) {
+  if (kind == iced_x86::OpKind::Register) {
     const auto reg = ctx.instr.op_register(operand_index);
     if (!is_vector_register(reg)) {
       if (ok) *ok = false;
@@ -94,9 +94,9 @@ big_uint read_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::s
     if (ok) *ok = true;
     return read_vec(ctx.state, reg) & mask(width);
   }
-  if (kind == iced_x86::OpKind::MEMORY) {
+  if (kind == iced_x86::OpKind::Memory) {
     if (ctx.instr.is_broadcast()) {
-      const auto element_width = iced_x86::memory_size_ext::get_size(static_cast<iced_x86::MemorySize>(ctx.instr.memory_size()));
+      const auto element_width = iced_x86::memory_size_ext::size(static_cast<iced_x86::MemorySize>(ctx.instr.memory_size()));
       const auto element = read_mem(ctx, detail::memory_address(ctx), element_width, ok);
       if (ok && !*ok) return 0;
       big_uint out = 0;
@@ -114,7 +114,7 @@ big_uint read_operand(ExecutionContext& ctx, std::uint32_t operand_index, std::s
 }
 
 std::uint64_t read_opmask(const CpuState& state, iced_x86::Register reg) {
-  if (reg == iced_x86::Register::NONE || reg == iced_x86::Register::K0) return ~std::uint64_t{0};
+  if (reg == iced_x86::Register::None || reg == iced_x86::Register::K0) return ~std::uint64_t{0};
   if (reg >= iced_x86::Register::K1 && reg <= iced_x86::Register::K7) {
     return state.opmask[static_cast<std::size_t>(reg) - static_cast<std::size_t>(iced_x86::Register::K0)];
   }
@@ -147,7 +147,7 @@ void lane_store(big_uint& value, std::size_t lane_offset_bytes, T lane_value) {
 template <typename T>
 big_uint apply_masked_lanes(ExecutionContext& ctx, iced_x86::Register dst_reg, big_uint original, big_uint computed) {
   const auto opmask = ctx.instr.op_mask();
-  if (opmask == iced_x86::Register::NONE || opmask == iced_x86::Register::K0) return computed;
+  if (opmask == iced_x86::Register::None || opmask == iced_x86::Register::K0) return computed;
 
   big_uint out = original & mask(vector_width(dst_reg));
   const auto lane_mask = read_opmask(ctx.state, opmask);
@@ -209,7 +209,7 @@ T avg_unsigned(T lhs, T rhs) {
 
 template <typename Fn>
 ExecutionResult legacy_custom_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -224,7 +224,7 @@ ExecutionResult legacy_custom_binary(ExecutionContext& ctx, Fn&& fn, bool zero_u
 
 template <typename T, typename Fn>
 ExecutionResult legacy_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -244,7 +244,7 @@ ExecutionResult legacy_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = 
 
 template <typename T, typename Fn>
 ExecutionResult vex_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -267,7 +267,7 @@ ExecutionResult vex_binary(ExecutionContext& ctx, Fn&& fn, bool zero_upper = tru
 
 template <typename T, typename Fn>
 ExecutionResult legacy_compare(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -287,7 +287,7 @@ ExecutionResult legacy_compare(ExecutionContext& ctx, Fn&& fn, bool zero_upper =
 
 template <typename T, typename Fn>
 ExecutionResult vex_compare(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -310,7 +310,7 @@ ExecutionResult vex_compare(ExecutionContext& ctx, Fn&& fn, bool zero_upper = tr
 
 template <typename T, typename Fn>
 ExecutionResult legacy_bitwise(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -324,7 +324,7 @@ ExecutionResult legacy_bitwise(ExecutionContext& ctx, Fn&& fn, bool zero_upper =
 
 template <typename T, typename Fn>
 ExecutionResult vex_bitwise(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -365,7 +365,7 @@ T shift_right_arithmetic_lane(T value, std::uint64_t count) {
 
 template <typename T, typename Fn>
 ExecutionResult legacy_shift_reg(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   // The count source (operand 1) is xmm-or-m128 for the legacy 2-operand
@@ -391,7 +391,7 @@ ExecutionResult legacy_shift_reg(ExecutionContext& ctx, Fn&& fn, bool zero_upper
 
 template <typename T, typename Fn>
 ExecutionResult legacy_shift_imm(ExecutionContext& ctx, Fn&& fn, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto count = static_cast<unsigned>(ctx.instr.immediate8() & 0xFFu);
@@ -407,7 +407,7 @@ ExecutionResult legacy_shift_imm(ExecutionContext& ctx, Fn&& fn, bool zero_upper
 
 template <typename T, typename Fn>
 ExecutionResult vex_shift_imm(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -427,10 +427,10 @@ ExecutionResult vex_shift_imm(ExecutionContext& ctx, Fn&& fn, bool zero_upper = 
 
 template <typename T, typename Fn>
 ExecutionResult vex_shift_reg(ExecutionContext& ctx, Fn&& fn, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
-  if (ctx.instr.op_kind(1) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(1))) {
+  if (ctx.instr.op_kind(1) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(1))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -452,7 +452,7 @@ ExecutionResult vex_shift_reg(ExecutionContext& ctx, Fn&& fn, bool zero_upper = 
 }
 
 ExecutionResult legacy_shift_dq_imm(ExecutionContext& ctx, bool shift_right, bool zero_upper = false) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto dst_reg = ctx.instr.op_register(0);
@@ -476,7 +476,7 @@ ExecutionResult legacy_shift_dq_imm(ExecutionContext& ctx, bool shift_right, boo
 }
 
 ExecutionResult vex_shift_dq_imm(ExecutionContext& ctx, bool shift_right, bool zero_upper = true) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   bool ok = false;
@@ -635,7 +635,7 @@ void set_pcmpstr_flags(CpuState& state, std::uint32_t intres2, std::size_t len1,
 }
 
 ExecutionResult pcmpstr(ExecutionContext& ctx, bool explicit_lengths, bool return_mask) {
-  if (ctx.instr.op_kind(0) != iced_x86::OpKind::REGISTER || !is_vector_register(ctx.instr.op_register(0))) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
     return detail::memory_fault(ctx, detail::memory_address(ctx));
   }
   const auto imm = static_cast<unsigned>(ctx.instr.immediate8());

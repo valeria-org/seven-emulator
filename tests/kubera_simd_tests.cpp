@@ -3,7 +3,7 @@
 #include <cmath>
 
 #include <iced_x86/code.hpp>
-#include <iced_x86/instruction_create.hpp>
+#include <iced_x86/instruction.hpp>
 #include <iced_x86/register.hpp>
 
 #include "kubera_test_support.hpp"
@@ -14,11 +14,11 @@ using namespace kubera::test;
 
 TEST(KuberaSimd, VpAndUsesExplicitSources) {
   std::vector<std::uint8_t> bytes;
-  const auto instr = iced_x86::InstructionFactory::with3(
-      iced_x86::Code::VEX_VPAND_XMM_XMM_XMMM128,
+  const auto instr = iced_x86::Instruction::with3(
+      iced_x86::Code::VEX_Vpand_xmm_xmm_xmmm128,
       iced_x86::Register::XMM0,
       iced_x86::Register::XMM1,
-      iced_x86::Register::XMM2);
+      iced_x86::Register::XMM2).value();
   ASSERT_TRUE(encode_to_bytes(instr, bytes, "vpand xmm0, xmm1, xmm2"));
 
   run_single(bytes,
@@ -35,11 +35,11 @@ TEST(KuberaSimd, VpAndUsesExplicitSources) {
 
 TEST(KuberaSimd, VaddssPreservesUpperLanesFromSrc1) {
   std::vector<std::uint8_t> bytes;
-  const auto instr = iced_x86::InstructionFactory::with3(
-      iced_x86::Code::VEX_VADDSS_XMM_XMM_XMMM32,
+  const auto instr = iced_x86::Instruction::with3(
+      iced_x86::Code::VEX_Vaddss_xmm_xmm_xmmm32,
       iced_x86::Register::XMM0,
       iced_x86::Register::XMM1,
-      iced_x86::Register::XMM2);
+      iced_x86::Register::XMM2).value();
   ASSERT_TRUE(encode_to_bytes(instr, bytes, "vaddss xmm0, xmm1, xmm2"));
 
   run_single(bytes,
@@ -73,10 +73,10 @@ TEST(KuberaSimd, VaddssPreservesUpperLanesFromSrc1) {
 
 TEST(KuberaSimd, SseCvtsi2ssConvertsAndPreservesUpperLanes) {
   std::vector<std::uint8_t> bytes;
-  const auto instr = iced_x86::InstructionFactory::with2(
-      iced_x86::Code::CVTSI2SS_XMM_RM64,
+  const auto instr = iced_x86::Instruction::with2(
+      iced_x86::Code::Cvtsi2ss_xmm_rm64,
       iced_x86::Register::XMM0,
-      iced_x86::Register::RAX);
+      iced_x86::Register::RAX).value();
   ASSERT_TRUE(encode_to_bytes(instr, bytes, "cvtsi2ss xmm0, rax"));
 
   run_single(bytes,
@@ -95,10 +95,10 @@ TEST(KuberaSimd, SseCvtsi2ssConvertsAndPreservesUpperLanes) {
 
 TEST(KuberaSimd, Sse2Cvttsd2siTruncates) {
   std::vector<std::uint8_t> bytes;
-  const auto instr = iced_x86::InstructionFactory::with2(
-      iced_x86::Code::CVTTSD2SI_R64_XMMM64,
+  const auto instr = iced_x86::Instruction::with2(
+      iced_x86::Code::Cvttsd2si_r64_xmmm64,
       iced_x86::Register::RAX,
-      iced_x86::Register::XMM1);
+      iced_x86::Register::XMM1).value();
   ASSERT_TRUE(encode_to_bytes(instr, bytes, "cvttsd2si rax, xmm1"));
 
   run_single(bytes,
@@ -126,10 +126,10 @@ TEST(KuberaSimd, Sse2PextrwExtractsSelectedWord) {
 
 TEST(KuberaSimd, Sse3HaddpsProducesHorizontalSums) {
   std::vector<std::uint8_t> bytes;
-  const auto instr = iced_x86::InstructionFactory::with2(
-      iced_x86::Code::HADDPS_XMM_XMMM128,
+  const auto instr = iced_x86::Instruction::with2(
+      iced_x86::Code::Haddps_xmm_xmmm128,
       iced_x86::Register::XMM0,
-      iced_x86::Register::XMM1);
+      iced_x86::Register::XMM1).value();
   ASSERT_TRUE(encode_to_bytes(instr, bytes, "haddps xmm0, xmm1"));
 
   run_single(bytes,
@@ -157,10 +157,10 @@ TEST(KuberaSimd, Sse3HaddpsProducesHorizontalSums) {
 
 TEST(KuberaSimd, Sse42Crc32MatchesCastagnoliReference) {
   std::vector<std::uint8_t> bytes;
-  const auto instr = iced_x86::InstructionFactory::with2(
-      iced_x86::Code::CRC32_R64_RM64,
+  const auto instr = iced_x86::Instruction::with2(
+      iced_x86::Code::Crc32_r64_rm64,
       iced_x86::Register::RAX,
-      iced_x86::Register::RBX);
+      iced_x86::Register::RBX).value();
   ASSERT_TRUE(encode_to_bytes(instr, bytes, "crc32 rax, rbx"));
 
   run_single(bytes,
