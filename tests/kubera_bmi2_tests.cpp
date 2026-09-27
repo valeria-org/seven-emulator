@@ -134,7 +134,7 @@ bool encode_to_bytes(const iced_x86::Instruction& instr, std::vector<std::uint8_
   iced_x86::Encoder encoder(64);
   const auto encoded_size = encoder.encode(instr, kBase);
   if (!encoded_size) {
-    std::cerr << "[encode fail] " << label << ": " << encoded_size.error().message << '\n';
+    std::cerr << "[encode fail] " << label << ": " << encoded_size.error().message() << '\n';
     return false;
   }
   bytes = encoder.take_buffer();

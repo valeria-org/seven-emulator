@@ -29,7 +29,7 @@ inline bool encode_to_bytes(const iced_x86::Instruction& instr, std::vector<std:
   iced_x86::Encoder encoder(64);
   const auto encoded_size = encoder.encode(instr, kBase);
   if (!encoded_size) {
-    ADD_FAILURE() << "[encode fail] " << label << ": " << encoded_size.error().message;
+    ADD_FAILURE() << "[encode fail] " << label << ": " << encoded_size.error().message();
     return false;
   }
   bytes = encoder.take_buffer();
