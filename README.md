@@ -179,7 +179,7 @@ Output reports the stop reason, instruction count, final RIP, RAX, and RSP.
 
 ## Instruction coverage
 
-1,721 instruction encodings are handled, spanning:
+1,773 instruction encodings are handled, spanning:
 
 | Category | Instructions |
 |-|-|
@@ -191,6 +191,8 @@ Output reports the stop reason, instruction count, final RIP, RAX, and RSP.
 | Bit manipulation | BSF, BSR, BSWAP, BT, BTC, BTR, BTS, POPCNT, LZCNT, TZCNT |
 | BMI / BMI2 | ANDN, BEXTR, BLSI, BLSMSK, BLSR, BZHI, MULX, PDEP, PEXT, RORX, SARX, SHLX, SHRX |
 | SIMD (SSE–AVX-512) | Integer, floating-point, pack/unpack, shuffle, move variants |
+| AES-NI / VAES | AESENC, AESENCLAST, AESDEC, AESDECLAST, AESIMC, AESKEYGENASSIST (legacy, VEX.128/256, EVEX.128/256/512) |
+| Key Locker | LOADIWKEY, ENCODEKEY128/256, AESENC/AESDEC 128KL/256KL, AESENCWIDE/AESDECWIDE 128KL/256KL (requires CR4.KL, bit 19; IWKey in `CpuState::iwkey`) |
 | x87 FPU | Arithmetic, compare, load/store, transcendental, control |
 | MMX | Integer SIMD on mm0–mm7 |
 | System | SYSCALL, SYSENTER/SYSEXIT, SYSRET, RDMSR, WRMSR, RDTSC, RDTSCP, RDPMC, CPUID, SWAPGS, CLTS, INVD, WBINVD, XSETBV |

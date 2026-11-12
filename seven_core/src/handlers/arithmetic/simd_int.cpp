@@ -10,6 +10,8 @@
 
 #include "seven/handler_helpers.hpp"
 
+#include "aes_internal.hpp"
+
 namespace seven::handlers {
 
 namespace {
@@ -692,6 +694,54 @@ ExecutionResult pcmpstr(ExecutionContext& ctx, bool explicit_lengths, bool retur
   return {};
 }
 
+// Legacy SSE AESENC/AESENCLAST/AESDEC/AESDECLAST: xmm1 = round(xmm1, xmm2/m128); bits above 127 preserved.
+template <typename Round>
+ExecutionResult aes_round_legacy(ExecutionContext& ctx, Round&& round) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
+    return detail::memory_fault(ctx, detail::memory_address(ctx));
+  }
+  bool ok = false;
+  const auto dst_reg = ctx.instr.op_register(0);
+  const auto key_bits = read_operand(ctx, 1, kXmmBytes, &ok);
+  if (!ok) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  write_vec(ctx.state, dst_reg, aes::to_bits(round(aes::load(read_vec(ctx.state, dst_reg), 0), aes::load(key_bits, 0))), false);
+  return {};
+}
+
+// VEX/EVEX VAES*: dst = round(src1, src2/mem) independently per 128-bit lane; upper bits zeroed.
+template <typename Round>
+ExecutionResult aes_round_vex(ExecutionContext& ctx, Round&& round) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
+    return detail::memory_fault(ctx, detail::memory_address(ctx));
+  }
+  bool ok = false;
+  const auto dst_reg = ctx.instr.op_register(0);
+  const auto width = vector_width(dst_reg);
+  const auto state_bits = read_operand(ctx, 1, width, &ok);
+  if (!ok) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  const auto key_bits = read_operand(ctx, 2, width, &ok);
+  if (!ok) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  big_uint out = 0;
+  for (std::size_t lane = 0; lane < width; lane += kXmmBytes) {
+    out |= aes::to_bits(round(aes::load(state_bits, lane), aes::load(key_bits, lane))) << (lane * 8);
+  }
+  write_vec(ctx.state, dst_reg, out, true);
+  return {};
+}
+
+// AESIMC / AESKEYGENASSIST (and VEX forms): xmm1 = fn(xmm2/m128).
+template <typename Fn>
+ExecutionResult aes_unary(ExecutionContext& ctx, Fn&& fn, bool zero_upper) {
+  if (ctx.instr.op_kind(0) != iced_x86::OpKind::Register || !is_vector_register(ctx.instr.op_register(0))) {
+    return detail::memory_fault(ctx, detail::memory_address(ctx));
+  }
+  bool ok = false;
+  const auto src_bits = read_operand(ctx, 1, kXmmBytes, &ok);
+  if (!ok) return detail::memory_fault(ctx, detail::memory_address(ctx));
+  write_vec(ctx.state, ctx.instr.op_register(0), aes::to_bits(fn(aes::load(src_bits, 0))), zero_upper);
+  return {};
+}
+
 }  // namespace
 
 #define KUBERA_LEGACY_BIN(name, type, fn) ExecutionResult handle_code_##name(ExecutionContext& ctx) { return legacy_binary<type>(ctx, fn); }
@@ -1017,6 +1067,40 @@ ExecutionResult handle_code_PCMPISTRI_XMM_XMMM128_IMM8(ExecutionContext& ctx) { 
 ExecutionResult handle_code_PCMPISTRM_XMM_XMMM128_IMM8(ExecutionContext& ctx) { return pcmpstr(ctx, false, true); }
 ExecutionResult handle_code_PCMPESTRI_XMM_XMMM128_IMM8(ExecutionContext& ctx) { return pcmpstr(ctx, true, false); }
 ExecutionResult handle_code_PCMPESTRM_XMM_XMMM128_IMM8(ExecutionContext& ctx) { return pcmpstr(ctx, true, true); }
+
+ExecutionResult handle_code_AESENC_XMM_XMMM128(ExecutionContext& ctx) { return aes_round_legacy(ctx, aes::enc_round<false>); }
+ExecutionResult handle_code_AESENCLAST_XMM_XMMM128(ExecutionContext& ctx) { return aes_round_legacy(ctx, aes::enc_round<true>); }
+ExecutionResult handle_code_AESDEC_XMM_XMMM128(ExecutionContext& ctx) { return aes_round_legacy(ctx, aes::dec_round<false>); }
+ExecutionResult handle_code_AESDECLAST_XMM_XMMM128(ExecutionContext& ctx) { return aes_round_legacy(ctx, aes::dec_round<true>); }
+ExecutionResult handle_code_AESIMC_XMM_XMMM128(ExecutionContext& ctx) { return aes_unary(ctx, aes::inv_mix_columns, false); }
+ExecutionResult handle_code_AESKEYGENASSIST_XMM_XMMM128_IMM8(ExecutionContext& ctx) {
+  const auto rcon = static_cast<std::uint32_t>(ctx.instr.immediate8());
+  return aes_unary(ctx, [rcon](const aes::Block& src) { return aes::keygen_assist(src, rcon); }, false);
+}
+ExecutionResult handle_code_VEX_VAESIMC_XMM_XMMM128(ExecutionContext& ctx) { return aes_unary(ctx, aes::inv_mix_columns, true); }
+ExecutionResult handle_code_VEX_VAESKEYGENASSIST_XMM_XMMM128_IMM8(ExecutionContext& ctx) {
+  const auto rcon = static_cast<std::uint32_t>(ctx.instr.immediate8());
+  return aes_unary(ctx, [rcon](const aes::Block& src) { return aes::keygen_assist(src, rcon); }, true);
+}
+
+// VEX.128/VEX.256 (VAES) and EVEX (VAES + AVX512VL/F) forms share one per-128-bit-lane
+// implementation; the destination register width selects the lane count. EVEX VAES* has no opmask.
+#define KUBERA_VAES_ROUND(name, round) \
+  ExecutionResult handle_code_##name(ExecutionContext& ctx) { return aes_round_vex(ctx, round); }
+#define KUBERA_VAES_ROUND_ALL(base, round) \
+  KUBERA_VAES_ROUND(VEX_##base##_XMM_XMM_XMMM128, round) \
+  KUBERA_VAES_ROUND(VEX_##base##_YMM_YMM_YMMM256, round) \
+  KUBERA_VAES_ROUND(EVEX_##base##_XMM_XMM_XMMM128, round) \
+  KUBERA_VAES_ROUND(EVEX_##base##_YMM_YMM_YMMM256, round) \
+  KUBERA_VAES_ROUND(EVEX_##base##_ZMM_ZMM_ZMMM512, round)
+
+KUBERA_VAES_ROUND_ALL(VAESENC, aes::enc_round<false>)
+KUBERA_VAES_ROUND_ALL(VAESENCLAST, aes::enc_round<true>)
+KUBERA_VAES_ROUND_ALL(VAESDEC, aes::dec_round<false>)
+KUBERA_VAES_ROUND_ALL(VAESDECLAST, aes::dec_round<true>)
+
+#undef KUBERA_VAES_ROUND
+#undef KUBERA_VAES_ROUND_ALL
 
 #undef KUBERA_LEGACY_BIN
 #undef KUBERA_LEGACY_CMP

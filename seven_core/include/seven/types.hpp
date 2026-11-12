@@ -95,6 +95,14 @@ struct VectorRegister {
   SimdUint value = 0;
 };
 
+// Key Locker internal wrapping key (IWKey), written by LOADIWKEY and used by ENCODEKEY*/AES*KL.
+struct KeyLockerIwKey {
+  std::array<std::uint8_t, 16> integrity_key{};
+  std::array<std::uint8_t, 32> encryption_key{};
+  bool no_backup = false;
+  std::uint8_t key_source = 0;
+};
+
 struct DescriptorTableRegister {
   std::uint64_t base = 0;
   std::uint16_t limit = 0;
@@ -129,6 +137,7 @@ struct CpuState {
   std::array<std::uint8_t, 8> x87_tags{0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3};
   std::array<std::uint64_t, 8> opmask{};
   std::array<VectorRegister, 32> vectors{};
+  KeyLockerIwKey iwkey{};
   std::uint8_t debug_suppression = 0;
   bool pending_single_step = false;
   std::uint64_t pending_debug_hit_bits = 0;
